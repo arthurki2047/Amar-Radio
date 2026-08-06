@@ -56,7 +56,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const recaptchaVerifier = useRef<RecaptchaVerifier | null>(null);
 
-  // Cleanup reCAPTCHA on unmount
+  // Cleanup reCAPTCHA on unmount or when the dialog closes
   useEffect(() => {
     return () => {
       if (recaptchaVerifier.current) {
@@ -64,7 +64,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         recaptchaVerifier.current = null;
       }
     };
-  }, []);
+  }, [isOpen]);
 
   const validateEmailDomain = (emailToValidate: string) => {
     const domain = emailToValidate.split('@')[1]?.toLowerCase();
@@ -132,23 +132,27 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
     setIsLoading(true);
     try {
-      if (!recaptchaVerifier.current) {
-        const container = document.getElementById('recaptcha-container');
-        if (!container) {
-          throw new Error("Security verification container not found. Please refresh and try again.");
-        }
-        
-        recaptchaVerifier.current = new RecaptchaVerifier(auth, container, {
-          'size': 'invisible',
-          'callback': () => {},
-          'expired-callback': () => {
-            if (recaptchaVerifier.current) {
-              recaptchaVerifier.current.clear();
-              recaptchaVerifier.current = null;
-            }
-          }
-        });
+      // Ensure we have a fresh verifier attached to the current DOM element
+      if (recaptchaVerifier.current) {
+        recaptchaVerifier.current.clear();
+        recaptchaVerifier.current = null;
       }
+
+      const container = document.getElementById('recaptcha-container');
+      if (!container) {
+        throw new Error("Security verification container not found. Please refresh and try again.");
+      }
+      
+      recaptchaVerifier.current = new RecaptchaVerifier(auth, container, {
+        'size': 'invisible',
+        'callback': () => {},
+        'expired-callback': () => {
+          if (recaptchaVerifier.current) {
+            recaptchaVerifier.current.clear();
+            recaptchaVerifier.current = null;
+          }
+        }
+      });
 
       const result = await initiatePhoneSignIn(auth, phoneNumber, recaptchaVerifier.current);
       setConfirmationResult(result);
@@ -160,6 +164,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       let errorMessage = t('auth_generic_error');
       if (error.code === 'auth/invalid-phone-number') errorMessage = "Invalid phone number format.";
       if (error.code === 'auth/too-many-requests') errorMessage = "Too many attempts. Please try again later.";
+      if (error.code === 'auth/unauthorized-domain') errorMessage = "This domain is not authorized for phone authentication in Firebase Console.";
 
       toast({
         title: t('auth_failed_title'),
@@ -265,6 +270,10 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     setPhoneNumber('+91');
     setOtp('');
     setShowPassword(false);
+    if (recaptchaVerifier.current) {
+      recaptchaVerifier.current.clear();
+      recaptchaVerifier.current = null;
+    }
   };
 
   return (
@@ -275,7 +284,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       }
     }}>
       <DialogContent className="sm:max-w-[420px] z-[60] bg-[#0f172a] border-white/10 text-white shadow-2xl overflow-hidden rounded-[2rem]">
-        <div id="recaptcha-container"></div>
+        <div id="recaptcha-container" className="hidden"></div>
         
         <AnimatePresence mode="wait">
           {isPendingVerification ? (
