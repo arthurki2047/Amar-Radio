@@ -143,10 +143,14 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       console.error("Google Sign-In Error:", error);
       let errorMessage = t('auth_generic_error');
       
+      // Handle the specific "Unauthorized Domain" error that occurs when a site 
+      // is accessed from a URL not listed in the Firebase Console's Auth settings.
       if (error.code === 'auth/unauthorized-domain') {
-        errorMessage = `Unauthorized domain. Please add this domain to the "Authorized Domains" list in your Firebase Console.`;
+        errorMessage = `This domain (${window.location.hostname}) is not authorized in the Firebase Console. Please add it to the "Authorized Domains" list in Authentication > Settings.`;
       } else if (error.code === 'auth/popup-blocked') {
-        errorMessage = "Sign-in popup was blocked by your browser. Please allow popups for this site.";
+        errorMessage = "The sign-in popup was blocked by your browser. Please allow popups for this site.";
+      } else if (error.code === 'auth/cancelled-by-user') {
+        errorMessage = "Sign-in was cancelled.";
       }
 
       toast({
