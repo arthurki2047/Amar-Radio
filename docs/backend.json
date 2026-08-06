@@ -103,7 +103,6 @@
     "providers": [
       "password",
       "google.com",
-      "phone",
       "anonymous"
     ]
   },

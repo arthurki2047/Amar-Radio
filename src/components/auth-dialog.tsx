@@ -1,14 +1,13 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/firebase';
 import { 
   initiateGoogleSignIn, 
   initiateEmailSignIn, 
   initiateEmailSignUp,
-  initiatePasswordReset,
-  initiatePhoneSignIn
+  initiatePasswordReset
 } from '@/firebase/non-blocking-login';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -21,11 +20,10 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Chrome, Mail, Lock, AlertCircle, CheckCircle2, ArrowLeft, User, Loader2, Eye, EyeOff, Smartphone } from 'lucide-react';
+import { Chrome, Mail, Lock, AlertCircle, CheckCircle2, ArrowLeft, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useApp } from '@/context/app-context';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RecaptchaVerifier, ConfirmationResult } from 'firebase/auth';
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -48,23 +46,9 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('+91');
-  const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isPendingVerification, setIsPendingVerification] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const recaptchaVerifier = useRef<RecaptchaVerifier | null>(null);
-
-  // Cleanup reCAPTCHA on unmount or when the dialog closes
-  useEffect(() => {
-    return () => {
-      if (recaptchaVerifier.current) {
-        recaptchaVerifier.current.clear();
-        recaptchaVerifier.current = null;
-      }
-    };
-  }, [isOpen]);
 
   const validateEmailDomain = (emailToValidate: string) => {
     const domain = emailToValidate.split('@')[1]?.toLowerCase();
@@ -113,89 +97,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       toast({
         title: t('auth_failed_title'),
         description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePhoneSignIn = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      toast({
-        title: t('auth_missing_phone_title'),
-        description: t('auth_missing_phone_desc'),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Ensure we have a fresh verifier attached to the current DOM element
-      if (recaptchaVerifier.current) {
-        recaptchaVerifier.current.clear();
-        recaptchaVerifier.current = null;
-      }
-
-      const container = document.getElementById('recaptcha-container');
-      if (!container) {
-        throw new Error("Security verification container not found. Please refresh and try again.");
-      }
-      
-      recaptchaVerifier.current = new RecaptchaVerifier(auth, container, {
-        'size': 'invisible',
-        'callback': () => {},
-        'expired-callback': () => {
-          if (recaptchaVerifier.current) {
-            recaptchaVerifier.current.clear();
-            recaptchaVerifier.current = null;
-          }
-        }
-      });
-
-      const result = await initiatePhoneSignIn(auth, phoneNumber, recaptchaVerifier.current);
-      setConfirmationResult(result);
-      toast({
-        title: t('auth_otp_sent_title'),
-        description: t('auth_otp_sent_desc'),
-      });
-    } catch (error: any) {
-      let errorMessage = t('auth_generic_error');
-      if (error.code === 'auth/invalid-phone-number') errorMessage = "Invalid phone number format.";
-      if (error.code === 'auth/too-many-requests') errorMessage = "Too many attempts. Please try again later.";
-      if (error.code === 'auth/unauthorized-domain') errorMessage = "This domain is not authorized for phone authentication in Firebase Console.";
-
-      toast({
-        title: t('auth_failed_title'),
-        description: errorMessage,
-        variant: "destructive",
-      });
-      
-      if (recaptchaVerifier.current) {
-        recaptchaVerifier.current.clear();
-        recaptchaVerifier.current = null;
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp || !confirmationResult) return;
-
-    setIsLoading(true);
-    try {
-      await confirmationResult.confirm(otp);
-      toast({ 
-        title: t('auth_welcome_back'), 
-        description: t('auth_signed_in_desc') 
-      });
-      onClose();
-    } catch (error: any) {
-      toast({
-        title: t('auth_failed_title'),
-        description: t('auth_invalid_otp'),
         variant: "destructive",
       });
     } finally {
@@ -265,15 +166,8 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
   const resetState = () => {
     setIsForgotPassword(false);
     setIsPendingVerification(false);
-    setConfirmationResult(null);
     setPassword('');
-    setPhoneNumber('+91');
-    setOtp('');
     setShowPassword(false);
-    if (recaptchaVerifier.current) {
-      recaptchaVerifier.current.clear();
-      recaptchaVerifier.current = null;
-    }
   };
 
   return (
@@ -284,8 +178,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       }
     }}>
       <DialogContent className="sm:max-w-[420px] z-[60] bg-[#0f172a] border-white/10 text-white shadow-2xl overflow-hidden rounded-[2rem]">
-        <div id="recaptcha-container" className="hidden"></div>
-        
         <AnimatePresence mode="wait">
           {isPendingVerification ? (
             <motion.div 
@@ -403,10 +295,9 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 </div>
 
                 <Tabs defaultValue="login" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/5 p-1 rounded-2xl border border-white/10 h-14">
+                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/5 p-1 rounded-2xl border border-white/10 h-14">
                     <TabsTrigger value="login" className="rounded-xl data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">{t('auth_login_tab')}</TabsTrigger>
                     <TabsTrigger value="signup" className="rounded-xl data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">{t('auth_signup_tab')}</TabsTrigger>
-                    <TabsTrigger value="phone" className="rounded-xl data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">{t('auth_phone_tab')}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="login" className="space-y-4 outline-none">
@@ -525,82 +416,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                       {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
                       {isLoading ? t('auth_processing') : t('auth_create_account')}
                     </Button>
-                  </TabsContent>
-
-                  <TabsContent value="phone" className="space-y-4 outline-none">
-                    <AnimatePresence mode="wait">
-                      {!confirmationResult ? (
-                        <motion.div
-                          key="phone-input"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="space-y-4"
-                        >
-                          <div className="space-y-2">
-                            <Label htmlFor="phone-number" className="text-sm font-medium text-gray-300">{t('auth_phone_label')}</Label>
-                            <div className="relative">
-                              <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                              <Input 
-                                id="phone-number" 
-                                placeholder="+91 98765 43210" 
-                                className="pl-12 h-14 bg-white/5 border-white/10 text-white rounded-xl focus:ring-purple-500 focus:border-purple-500" 
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                              />
-                            </div>
-                            <p className="text-[10px] text-gray-500 mt-1">{t('auth_phone_disclaimer')}</p>
-                          </div>
-                          <Button 
-                            className="w-full h-14 bg-purple-600 text-white hover:bg-purple-700 font-bold text-lg rounded-2xl shadow-xl transition-all active:scale-95" 
-                            onClick={handlePhoneSignIn}
-                            disabled={isLoading}
-                          >
-                            {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
-                            {isLoading ? t('auth_processing') : t('auth_send_otp')}
-                          </Button>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="otp-input"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="space-y-4"
-                        >
-                          <div className="space-y-2">
-                            <Label htmlFor="otp" className="text-sm font-medium text-gray-300">{t('auth_otp_label')}</Label>
-                            <div className="relative">
-                              <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                              <Input 
-                                id="otp" 
-                                placeholder="123456" 
-                                className="pl-12 h-14 bg-white/5 border-white/10 text-white rounded-xl focus:ring-purple-500 focus:border-purple-500" 
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline"
-                              className="flex-1 h-14 border-white/10 bg-white/5 rounded-2xl" 
-                              onClick={() => setConfirmationResult(null)}
-                            >
-                              {t('auth_back_to_phone')}
-                            </Button>
-                            <Button 
-                              className="flex-[2] h-14 bg-purple-600 text-white hover:bg-purple-700 font-bold text-lg rounded-2xl shadow-xl transition-all active:scale-95" 
-                              onClick={handleVerifyOtp}
-                              disabled={isLoading}
-                            >
-                              {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
-                              {isLoading ? t('auth_processing') : t('auth_verify_otp')}
-                            </Button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </TabsContent>
                 </Tabs>
               </div>
