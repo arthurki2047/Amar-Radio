@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -21,7 +20,7 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Chrome, Mail, Lock, AlertCircle, CheckCircle2, ArrowLeft, User, Loader2, Eye, EyeOff, Phone, Smartphone } from 'lucide-react';
+import { Chrome, Mail, Lock, AlertCircle, CheckCircle2, ArrowLeft, User, Loader2, Eye, EyeOff, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useApp } from '@/context/app-context';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,19 +53,17 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
   const [isPendingVerification, setIsPendingVerification] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const recaptchaRef = useRef<HTMLDivElement>(null);
   const recaptchaVerifier = useRef<RecaptchaVerifier | null>(null);
 
+  // Cleanup reCAPTCHA on unmount
   useEffect(() => {
-    if (isOpen && !recaptchaVerifier.current && auth) {
-      recaptchaVerifier.current = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': (response: any) => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        }
-      });
-    }
-  }, [isOpen, auth]);
+    return () => {
+      if (recaptchaVerifier.current) {
+        recaptchaVerifier.current.clear();
+        recaptchaVerifier.current = null;
+      }
+    };
+  }, []);
 
   const validateEmailDomain = (emailToValidate: string) => {
     const domain = emailToValidate.split('@')[1]?.toLowerCase();
@@ -135,7 +132,27 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
     setIsLoading(true);
     try {
-      if (!recaptchaVerifier.current) throw new Error("Recaptcha not initialized");
+      // Lazy initialization of reCAPTCHA when needed
+      if (!recaptchaVerifier.current) {
+        const container = document.getElementById('recaptcha-container');
+        if (!container) {
+          throw new Error("Security verification container not found. Please refresh and try again.");
+        }
+        
+        recaptchaVerifier.current = new RecaptchaVerifier(auth, container, {
+          'size': 'invisible',
+          'callback': () => {
+            // reCAPTCHA solved
+          },
+          'expired-callback': () => {
+            if (recaptchaVerifier.current) {
+              recaptchaVerifier.current.clear();
+              recaptchaVerifier.current = null;
+            }
+          }
+        });
+      }
+
       const result = await initiatePhoneSignIn(auth, phoneNumber, recaptchaVerifier.current);
       setConfirmationResult(result);
       toast({
@@ -144,11 +161,18 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       });
     } catch (error: any) {
       console.error("Phone Auth Error:", error);
+      
+      let errorMessage = t('auth_generic_error');
+      if (error.code === 'auth/invalid-phone-number') errorMessage = "Invalid phone number format.";
+      if (error.code === 'auth/too-many-requests') errorMessage = "Too many attempts. Please try again later.";
+
       toast({
         title: t('auth_failed_title'),
-        description: t('auth_generic_error'),
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Reset verifier on error to allow retry
       if (recaptchaVerifier.current) {
         recaptchaVerifier.current.clear();
         recaptchaVerifier.current = null;
@@ -258,7 +282,9 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       }
     }}>
       <DialogContent className="sm:max-w-[420px] z-[60] bg-[#0f172a] border-white/10 text-white shadow-2xl overflow-hidden rounded-[2rem]">
+        {/* Invisible container for reCAPTCHA */}
         <div id="recaptcha-container"></div>
+        
         <AnimatePresence mode="wait">
           {isPendingVerification ? (
             <motion.div 
