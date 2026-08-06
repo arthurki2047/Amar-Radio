@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -84,9 +85,12 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         setIsPendingVerification(true);
       }
     } catch (error: any) {
+      console.error("Email Auth Error:", error);
       let message = t('auth_generic_error');
+      
       if (error.code === 'auth/user-not-found') message = t('auth_user_not_found');
       if (error.code === 'auth/wrong-password') message = t('auth_wrong_password');
+      if (error.code === 'auth/invalid-credential') message = t('auth_invalid_credential');
       if (error.code === 'auth/email-already-in-use') message = t('auth_email_in_use');
       if (error.code === 'auth/weak-password') message = t('auth_weak_password');
       if (error.code === 'auth/email-not-verified') message = t('auth_email_not_verified_msg');
@@ -143,8 +147,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       console.error("Google Sign-In Error:", error);
       let errorMessage = t('auth_generic_error');
       
-      // Handle the specific "Unauthorized Domain" error that occurs when a site 
-      // is accessed from a URL not listed in the Firebase Console's Auth settings.
       if (error.code === 'auth/unauthorized-domain') {
         errorMessage = `This domain (${window.location.hostname}) is not authorized in the Firebase Console. Please add it to the "Authorized Domains" list in Authentication > Settings.`;
       } else if (error.code === 'auth/popup-blocked') {
