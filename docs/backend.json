@@ -1,0 +1,116 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account in the Amar Radio application, allowing access to personalized features and restricted radio stations.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "A unique username chosen by the user for login purposes."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for communication and account recovery.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account information was last updated.",
+          "format": "date-time"
+        },
+        "favoriteStationIds": {
+          "type": "array",
+          "description": "An array of IDs referencing radio stations that the user has marked as favorites.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastPlayedStationId": {
+          "type": "string",
+          "description": "The ID of the last station the user listened to."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "RadioStation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RadioStation",
+      "type": "object",
+      "description": "Represents a radio station available for streaming.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the station."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the radio station."
+        },
+        "streamUrl": {
+          "type": "string",
+          "description": "The URL of the audio stream."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "The URL of the station's logo image."
+        },
+        "category": {
+          "type": "string",
+          "description": "The genre or category of the station.",
+          "enum": [
+            "music",
+            "news",
+            "bhakti",
+            "bangla_music"
+          ]
+        },
+        "artist": {
+          "type": "string",
+          "description": "Associated artist if it is a specialized artist channel."
+        },
+        "requiresAuthentication": {
+          "type": "boolean",
+          "description": "Whether the station requires the user to be signed in."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "streamUrl",
+        "logoUrl"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "google.com",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "#/entities/User",
+      "description": "Stores individual user profiles, including favorites and history."
+    },
+    "/radioStations/{stationId}": {
+      "schema": "#/entities/RadioStation",
+      "description": "Global catalog of available radio streams."
+    }
+  }
+}

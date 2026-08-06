@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * Amar Radio Security Rules
+     *
+     * Core Philosophy:
+     * - User-specific data (profiles and favorites) is strictly owned by the authenticated user.
+     * - The radio station catalog is publicly readable to allow browsing.
+     * - Writing to the catalog is restricted to authenticated users for the migration/setup phase.
+     */
+
+    // --- Helper Functions ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for user profile documents.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && (request.resource.data.id == userId || !('id' in request.resource.data));
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Subcollection for storing a user's favorite radio stations.
+       */
+      match /favoriteStations/{stationId} {
+        allow get, list: if isOwner(userId);
+        allow create, update, delete: if isOwner(userId);
+      }
+    }
+
+    /**
+     * @description Rules for the global catalog of radio stations.
+     * Metadata is public so unauthenticated users can browse the catalog.
+     * Writes are allowed for authenticated users to enable catalog synchronization.
+     */
+    match /radioStations/{stationId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSignedIn(); 
+    }
+  }
+}
