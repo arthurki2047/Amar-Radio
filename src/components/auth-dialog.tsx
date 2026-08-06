@@ -100,7 +100,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         setIsPendingVerification(true);
       }
     } catch (error: any) {
-      console.error("Email Auth Error:", error);
       let message = t('auth_generic_error');
       
       if (error.code === 'auth/user-not-found') message = t('auth_user_not_found');
@@ -132,7 +131,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
     setIsLoading(true);
     try {
-      // Lazy initialization of reCAPTCHA when needed
       if (!recaptchaVerifier.current) {
         const container = document.getElementById('recaptcha-container');
         if (!container) {
@@ -141,9 +139,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         
         recaptchaVerifier.current = new RecaptchaVerifier(auth, container, {
           'size': 'invisible',
-          'callback': () => {
-            // reCAPTCHA solved
-          },
+          'callback': () => {},
           'expired-callback': () => {
             if (recaptchaVerifier.current) {
               recaptchaVerifier.current.clear();
@@ -160,8 +156,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         description: t('auth_otp_sent_desc'),
       });
     } catch (error: any) {
-      console.error("Phone Auth Error:", error);
-      
       let errorMessage = t('auth_generic_error');
       if (error.code === 'auth/invalid-phone-number') errorMessage = "Invalid phone number format.";
       if (error.code === 'auth/too-many-requests') errorMessage = "Too many attempts. Please try again later.";
@@ -172,7 +166,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         variant: "destructive",
       });
       
-      // Reset verifier on error to allow retry
       if (recaptchaVerifier.current) {
         recaptchaVerifier.current.clear();
         recaptchaVerifier.current = null;
@@ -243,7 +236,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       });
       onClose();
     } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
       let errorMessage = t('auth_generic_error');
       
       if (error.code === 'auth/unauthorized-domain') {
@@ -282,7 +274,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       }
     }}>
       <DialogContent className="sm:max-w-[420px] z-[60] bg-[#0f172a] border-white/10 text-white shadow-2xl overflow-hidden rounded-[2rem]">
-        {/* Invisible container for reCAPTCHA */}
         <div id="recaptcha-container"></div>
         
         <AnimatePresence mode="wait">

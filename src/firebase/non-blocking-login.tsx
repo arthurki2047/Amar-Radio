@@ -1,4 +1,3 @@
-
 'use client';
 import {
   Auth,
@@ -21,7 +20,6 @@ export function initiateAnonymousSignIn(authInstance: Auth): Promise<void> {
   return signInAnonymously(authInstance)
     .then(() => {})
     .catch(error => {
-      console.error("Anonymous Sign-In Error:", error);
       throw error;
     });
 }
@@ -45,7 +43,6 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
       }
     })
     .catch((error) => {
-      console.error("Sign-Up Error:", error);
       throw error;
     });
 }
@@ -66,7 +63,6 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
       }
     })
     .catch((error) => {
-      console.error("Sign-In Error:", error);
       throw error;
     });
 }
@@ -78,7 +74,6 @@ export function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
   return signInWithPopup(authInstance, provider)
     .then(() => {})
     .catch((error) => {
-      console.error("Google Sign-In Error:", error);
       throw error;
     });
 }
@@ -89,7 +84,6 @@ export function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
 export function initiatePhoneSignIn(authInstance: Auth, phoneNumber: string, recaptchaVerifier: RecaptchaVerifier): Promise<ConfirmationResult> {
   return signInWithPhoneNumber(authInstance, phoneNumber, recaptchaVerifier)
     .catch((error) => {
-      console.error("Phone Sign-In Error:", error);
       throw error;
     });
 }
@@ -98,7 +92,6 @@ export function initiatePhoneSignIn(authInstance: Auth, phoneNumber: string, rec
 export function initiatePasswordReset(authInstance: Auth, email: string): Promise<void> {
   return sendPasswordResetEmail(authInstance, email)
     .catch((error) => {
-      console.error("Password Reset Error:", error);
       throw error;
     });
 }
@@ -107,7 +100,6 @@ export function initiatePasswordReset(authInstance: Auth, email: string): Promis
 export function initiateSignOut(authInstance: Auth): Promise<void> {
   return signOut(authInstance)
     .catch(error => {
-      console.error("Sign-Out Error:", error);
       throw error;
     });
 }
