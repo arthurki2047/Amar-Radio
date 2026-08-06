@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -47,7 +48,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+91');
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isPendingVerification, setIsPendingVerification] = useState(false);
@@ -120,7 +121,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
   };
 
   const handlePhoneSignIn = async () => {
-    if (!phoneNumber) {
+    if (!phoneNumber || phoneNumber.length < 10) {
       toast({
         title: t('auth_missing_phone_title'),
         description: t('auth_missing_phone_desc'),
@@ -261,7 +262,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     setIsPendingVerification(false);
     setConfirmationResult(null);
     setPassword('');
-    setPhoneNumber('');
+    setPhoneNumber('+91');
     setOtp('');
     setShowPassword(false);
   };

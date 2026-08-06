@@ -113,6 +113,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       setDocumentNonBlocking(userRef, {
         id: user.uid,
         email: user.email,
+        phoneNumber: user.phoneNumber || null,
         username: user.displayName || user.email?.split('@')[0],
         updatedAt: new Date().toISOString()
       }, { merge: true });
