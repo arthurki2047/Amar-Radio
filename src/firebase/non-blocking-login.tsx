@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Auth,
@@ -10,6 +11,9 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   updateProfile,
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  ConfirmationResult
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -75,6 +79,17 @@ export function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
     .then(() => {})
     .catch((error) => {
       console.error("Google Sign-In Error:", error);
+      throw error;
+    });
+}
+
+/** 
+ * Initiate Phone sign-in by sending an OTP.
+ */
+export function initiatePhoneSignIn(authInstance: Auth, phoneNumber: string, recaptchaVerifier: RecaptchaVerifier): Promise<ConfirmationResult> {
+  return signInWithPhoneNumber(authInstance, phoneNumber, recaptchaVerifier)
+    .catch((error) => {
+      console.error("Phone Sign-In Error:", error);
       throw error;
     });
 }
