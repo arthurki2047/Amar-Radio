@@ -12,6 +12,7 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const MAX_RECENTLY_PLAYED = 10;
 const PUBLIC_STATION_IDS = ['s9', 's10', 's15'];
+const ADMIN_EMAIL = 'arthurki2047@gmail.com';
 
 interface AppContextType {
   view: View;
@@ -47,6 +48,7 @@ interface AppContextType {
   setIsAuthDialogOpen: (open: boolean) => void;
   sleepTimerDuration: number | null;
   setSleepTimer: (minutes: number | null) => void;
+  isAdmin: boolean;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -72,6 +74,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
+
+  const isAdmin = useMemo(() => {
+    return !!user && user.email === ADMIN_EMAIL;
+  }, [user]);
 
   const stationsRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -129,8 +135,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     const handlePause = () => setIsPlaying(false);
     const handleEnded = () => {
       setIsPlaying(false);
-      // Optional: auto-play next station
-      // playNext();
     };
 
     audio.addEventListener('play', handlePlay);
@@ -291,7 +295,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, [t, toast]);
 
   const syncStationsToFirestore = useCallback(() => {
-    if (!db || !user) {
+    if (!db || !user || !isAdmin) {
       toast({
         title: t('auth_required_title'),
         description: t('auth_required_desc'),
@@ -309,7 +313,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       title: t('catalog_sync_success_title'),
       description: t('catalog_sync_success_desc'),
     });
-  }, [db, user, toast, t]);
+  }, [db, user, isAdmin, toast, t]);
 
   const [isUpdatePanelVisible, setIsUpdatePanelVisible] = useState(true);
 
@@ -341,7 +345,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     language, setLanguage, t, isUpdatePanelVisible, toggleUpdatePanel,
     searchTerm, handleSearch, filteredStations, syncStationsToFirestore,
     isAuthDialogOpen, setIsAuthDialogOpen,
-    sleepTimerDuration, setSleepTimer
+    sleepTimerDuration, setSleepTimer, isAdmin
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

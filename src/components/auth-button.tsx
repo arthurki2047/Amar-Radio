@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth, useUser } from '@/firebase';
@@ -18,7 +19,7 @@ import { AuthDialog } from './auth-dialog';
 export function AuthButton() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
-  const { setView, isAuthDialogOpen, setIsAuthDialogOpen } = useApp();
+  const { setView, isAuthDialogOpen, setIsAuthDialogOpen, isAdmin } = useApp();
 
   if (isUserLoading) {
     return <Button variant="ghost" size="icon" disabled className="animate-pulse"><UserIcon className="h-5 w-5 opacity-50" /></Button>;
@@ -58,11 +59,15 @@ export function AuthButton() {
               )}
             </div>
           </div>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setView('ADMIN')} className="cursor-pointer">
-            <Settings2 className="mr-2 h-4 w-4" />
-            <span>Admin Dashboard</span>
-          </DropdownMenuItem>
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setView('ADMIN')} className="cursor-pointer">
+                <Settings2 className="mr-2 h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => initiateSignOut(auth)} className="text-destructive focus:text-destructive cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />

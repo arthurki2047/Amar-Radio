@@ -10,7 +10,6 @@ import {
   ArrowLeft, 
   RefreshCw, 
   Users, 
-  Settings, 
   BarChart3, 
   Bell, 
   ShieldAlert,
@@ -18,9 +17,30 @@ import {
   TrendingUp
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/firebase";
 
 export function AdminView() {
-  const { setView, syncStationsToFirestore, t } = useApp();
+  const { setView, syncStationsToFirestore, t, isAdmin } = useApp();
+  const { isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return <div className="p-8 text-center animate-pulse">Verifying permissions...</div>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center h-[60vh]">
+        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-bold">Access Restricted</h1>
+        <p className="text-muted-foreground mt-2 max-w-md">
+          This dashboard is only available to the authorized administrator ID.
+        </p>
+        <Button className="mt-6" onClick={() => setView('HOME')}>
+          Return Home
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-8">
@@ -30,7 +50,7 @@ export function AdminView() {
             <LayoutDashboard className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight">admin dashboard available only for my id</h1>
             <p className="text-muted-foreground text-sm">Comprehensive control for Amar Radio.</p>
           </div>
         </div>
@@ -185,7 +205,7 @@ export function AdminView() {
               Launch Editor
             </Button>
           </CardContent>
-        </Card>
+        </div>
       </div>
 
       <div className="pt-8 text-center text-xs text-muted-foreground">
