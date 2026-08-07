@@ -114,12 +114,12 @@ export const stations: Station[] = [
   { id: 's120', name: 'MY CLUB REMIX', streamUrl: 'https://stream-160.zeno.fm/pkvh8zhyzp8uv', logoUrl: placeholders.my_club_remix_logo, category: 'music' },
   { id: 's121', name: 'My 90s Bengali', streamUrl: 'https://stream-154.zeno.fm/9bze9t1pvs8uv', logoUrl: placeholders.my_90s_bengali_logo, category: 'bangla_music' },
   { id: 's122', name: 'FnF.FM online', streamUrl: 'https://eu6.fastcast4u.com/proxy/arrahm00?mp=/1', logoUrl: placeholders.fnf_fm_online_logo, category: 'music' },
-  { id: 's124', name: 'Radio Theater Bangla', streamUrl: 'https://stream-151.zeno.fm/hrawdb5yx8ovv', logoUrl: 'https://api.iconify.design/emojione/performing-arts.svg', category: 'bangla_music' },
-  { id: 's125', name: 'Radio Malda', streamUrl: 'https://stream-175.zeno.fm/10rt7tpf6ehvv', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'news' },
-  { id: 's126', name: 'Radio High 92.7', streamUrl: 'https://stream-177.zeno.fm/89zztr1dec9uv', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'music' },
+  { id: 's124', name: 'Radio Theater Bangla', streamUrl: 'https://stream-151.zeno.fm/hrawdb5yx8ovv', logoUrl: placeholders.radio_theater_bangla_logo, category: 'bangla_music' },
+  { id: 's125', name: 'Radio Malda', streamUrl: 'https://stream-175.zeno.fm/10rt7tpf6ehvv', logoUrl: placeholders.radio_malda_logo, category: 'news' },
+  { id: 's126', name: 'Radio High 92.7', streamUrl: 'https://stream-177.zeno.fm/89zztr1dec9uv', logoUrl: placeholders.radio_high_92_7_logo, category: 'music' },
   { id: 's127', name: 'Radio Milan 90.4', streamUrl: 'https://stream-175.zeno.fm/io4zzsy1ndbvv', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'music' },
-  { id: 's128', name: 'Radio Vivid Voice', streamUrl: 'https://stream-152.zeno.fm/xuin6ocdc2juv', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'music' },
-  { id: 's129', name: 'Ankora Radio', streamUrl: 'https://stream-175.zeno.fm/xush70b1cbruv', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'bangla_music' },
-  { id: 's130', name: 'Kolkata FM', streamUrl: 'https://stream-177.zeno.fm/8rx9t0gfps8uv', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'bangla_music' },
-  { id: 's131', name: 'Radio Moonlight', streamUrl: 'https://stream-178.zeno.fm/6tvvetnnhzzuv', logoUrl: 'https://api.iconify.design/emojione/crescent-moon.svg', category: 'music' }
+  { id: 's128', name: 'Radio Vivid Voice', streamUrl: 'https://stream-152.zeno.fm/xuin6ocdc2juv', logoUrl: placeholders.radio_vivid_voice_logo, category: 'music' },
+  { id: 's129', name: 'Ankora Radio', streamUrl: 'https://stream-175.zeno.fm/xush70b1cbruv', logoUrl: placeholders.ankora_radio_logo, category: 'bangla_music' },
+  { id: 's130', name: 'Kolkata FM', streamUrl: 'https://stream-177.zeno.fm/8rx9t0gfps8uv', logoUrl: placeholders.kolkata_fm_logo, category: 'bangla_music' },
+  { id: 's131', name: 'Radio Moonlight', streamUrl: 'https://stream-178.zeno.fm/6tvvetnnhzzuv', logoUrl: placeholders.radio_moonlight_logo, category: 'music' }
 ];
