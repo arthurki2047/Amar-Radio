@@ -16,11 +16,31 @@ import {
   TrendingUp,
   Edit,
   Trash2,
-  Palette
+  Palette,
+  Check
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export function AdminView() {
   const { 
@@ -36,6 +56,17 @@ export function AdminView() {
     allStations
   } = useApp();
   const { isUserLoading } = useUser();
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editText, setEditText] = useState("");
+
+  // Sync edit text with current announcement when dialog opens
+  useEffect(() => {
+    if (isEditDialogOpen) {
+      setEditText(announcement);
+    }
+  }, [isEditDialogOpen, announcement]);
 
   // Calculate Top Station from real user data
   const topStationName = useMemo(() => {
@@ -79,18 +110,14 @@ export function AdminView() {
     );
   }
 
-  const handleUpdateAnnouncement = () => {
-    const currentMsg = typeof announcement === 'string' ? announcement : "";
-    const newText = window.prompt("Edit current broadcast message:", currentMsg);
-    if (newText !== null) {
-      updateAnnouncement(newText, announcementColor);
-    }
+  const handleSaveAnnouncement = () => {
+    updateAnnouncement(editText, announcementColor);
+    setIsEditDialogOpen(false);
   };
 
-  const handleDeleteAnnouncement = () => {
-    if (window.confirm("Are you sure you want to clear the live broadcast?")) {
-      updateAnnouncement("", announcementColor);
-    }
+  const handleConfirmDelete = () => {
+    updateAnnouncement("", announcementColor);
+    setIsDeleteDialogOpen(false);
   };
 
   const handleToggleColor = () => {
@@ -226,19 +253,65 @@ export function AdminView() {
              </div>
              
              <div className="flex flex-wrap gap-3">
-                <Button onClick={handleUpdateAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
+                <Button onClick={() => setIsEditDialogOpen(true)} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
                   <Edit className="w-4 h-4" /> Edit Broadcast
                 </Button>
                 <Button onClick={handleToggleColor} variant="secondary" className="flex-1 min-w-[120px] gap-2 rounded-xl h-11">
                   <Palette className="w-4 h-4" /> Cycle Color
                 </Button>
-                <Button onClick={handleDeleteAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-destructive/10 text-destructive border-destructive/20 rounded-xl h-11">
+                <Button onClick={() => setIsDeleteDialogOpen(true)} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-destructive/10 text-destructive border-destructive/20 rounded-xl h-11">
                   <Trash2 className="w-4 h-4" /> Clear Message
                 </Button>
              </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Announcement Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-[#0f172a] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Edit Announcement</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Update the scrolling message displayed to all listeners.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea 
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              placeholder="Enter message here..."
+              className="min-h-[120px] bg-white/5 border-white/10 text-white focus:ring-purple-500"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="border-white/10 text-white hover:bg-white/5">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAnnouncement} className="bg-purple-600 hover:bg-purple-700 text-white gap-2">
+              <Check className="w-4 h-4" /> Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Alert */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-[#0f172a] border-white/10 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              This will immediately clear the live broadcast message for everyone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Clear Message
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="pt-8 text-center text-xs text-muted-foreground">
         Amar Radio Admin v1.2.1 • Build ID: AR-2024-08-05
