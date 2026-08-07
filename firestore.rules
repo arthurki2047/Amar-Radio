@@ -8,8 +8,8 @@ service cloud.firestore {
      *
      * Core Philosophy:
      * - User-specific data is strictly owned by the authenticated user.
-     * - The radio station catalog is publicly readable.
-     * - Writing to the catalog is restricted ONLY to the administrator (arthurki2047@gmail.com).
+     * - The radio station catalog and global settings are publicly readable.
+     * - Writing to the catalog and settings is restricted ONLY to the administrator.
      */
 
     // --- Helper Functions ---
@@ -52,11 +52,18 @@ service cloud.firestore {
 
     /**
      * @description Rules for the global catalog of radio stations.
-     * Metadata is public. Writes are strictly restricted to the admin.
      */
     match /radioStations/{stationId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin(); 
+    }
+
+    /**
+     * @description Rules for global application settings (Announcements, etc.)
+     */
+    match /settings/{settingId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
   }
 }

@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
 
 export function AdminView() {
-  const { setView, syncStationsToFirestore, t, isAdmin } = useApp();
+  const { setView, syncStationsToFirestore, t, isAdmin, announcement, updateAnnouncement } = useApp();
   const { isUserLoading } = useUser();
 
   if (isUserLoading) {
@@ -41,6 +41,13 @@ export function AdminView() {
       </div>
     );
   }
+
+  const handleUpdateAnnouncement = () => {
+    const newText = prompt("Enter new announcement text:", announcement);
+    if (newText !== null) {
+      updateAnnouncement(newText);
+    }
+  };
 
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-8">
@@ -155,13 +162,13 @@ export function AdminView() {
                 <Bell className="w-6 h-6" />
               </div>
             </div>
-            <CardTitle className="mt-4">Announcements</CardTitle>
+            <CardTitle className="mt-4">activate this option so admin can make announcement</CardTitle>
             <CardDescription>
               Update the scrolling notification bar text.
             </CardDescription>
           </CardHeader>
           <CardContent>
-             <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11" disabled>
+             <Button onClick={handleUpdateAnnouncement} variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11">
               Update Broadcast
             </Button>
           </CardContent>

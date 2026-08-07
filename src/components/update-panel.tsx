@@ -7,8 +7,7 @@ import { X } from 'lucide-react';
 import { Button } from './ui/button';
 
 export function UpdatePanel() {
-  const { t, toggleUpdatePanel } = useApp();
-  const updateText = t('welcome_message');
+  const { toggleUpdatePanel, announcement } = useApp();
 
   const panelVariants = {
     hidden: { opacity: 0, height: 0, y: -20 },
@@ -35,7 +34,7 @@ export function UpdatePanel() {
         </Button>
         <div className="flex-1 overflow-hidden relative h-16 w-full flex items-center">
           <div className="absolute whitespace-nowrap animate-scroll-left hover:pause-animation text-xl font-medium text-gray-200 px-6">
-            {updateText}
+            {announcement}
           </div>
         </div>
       </div>

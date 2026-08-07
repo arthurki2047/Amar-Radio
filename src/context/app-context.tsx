@@ -49,6 +49,8 @@ interface AppContextType {
   sleepTimerDuration: number | null;
   setSleepTimer: (minutes: number | null) => void;
   isAdmin: boolean;
+  announcement: string;
+  updateAnnouncement: (text: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -79,6 +81,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     return !!user && user.email === ADMIN_EMAIL;
   }, [user]);
 
+  // Firestore sync for stations
   const stationsRef = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, 'radioStations');
@@ -93,6 +96,22 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     return staticStations;
   }, [dbStations]);
 
+  // Firestore sync for global announcement
+  const announcementRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'settings', 'announcement');
+  }, [db]);
+
+  const { data: announcementData } = useDoc<{ value: string }>(announcementRef);
+  const announcement = announcementData?.value || translations[language]['welcome_message'] || "Welcome to Amar Radio!";
+
+  const updateAnnouncement = useCallback((text: string) => {
+    if (!announcementRef || !isAdmin) return;
+    setDocumentNonBlocking(announcementRef, { id: 'announcement', value: text }, { merge: true });
+    toast({ title: "Announcement updated!" });
+  }, [announcementRef, isAdmin, toast]);
+
+  // User profile logic
   const userRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, 'users', user.uid);
@@ -345,7 +364,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     language, setLanguage, t, isUpdatePanelVisible, toggleUpdatePanel,
     searchTerm, handleSearch, filteredStations, syncStationsToFirestore,
     isAuthDialogOpen, setIsAuthDialogOpen,
-    sleepTimerDuration, setSleepTimer, isAdmin
+    sleepTimerDuration, setSleepTimer, isAdmin,
+    announcement, updateAnnouncement
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

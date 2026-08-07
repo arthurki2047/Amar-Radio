@@ -97,6 +97,24 @@
         "streamUrl",
         "logoUrl"
       ]
+    },
+    "AppSetting": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AppSetting",
+      "type": "object",
+      "description": "Global application settings.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "value"
+      ]
     }
   },
   "auth": {
@@ -114,6 +132,10 @@
     "/radioStations/{stationId}": {
       "schema": "#/entities/RadioStation",
       "description": "Global catalog of available radio streams."
+    },
+    "/settings/{settingId}": {
+      "schema": "#/entities/AppSetting",
+      "description": "Global application settings like announcements."
     }
   }
 }
