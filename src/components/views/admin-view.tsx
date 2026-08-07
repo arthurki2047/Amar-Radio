@@ -67,8 +67,8 @@ export function AdminView() {
     }
   }, [isEditDialogOpen, announcement]);
 
-  const topStationName = useMemo(() => {
-    if (!allUsersData || allUsersData.length === 0) return "N/A";
+  const topStationsList = useMemo(() => {
+    if (!allUsersData || allUsersData.length === 0) return [];
     const counts: Record<string, number> = {};
     allUsersData.forEach(u => {
       if (u.lastPlayedStationId) {
@@ -76,17 +76,14 @@ export function AdminView() {
       }
     });
     
-    let topId = "";
-    let maxCount = 0;
-    Object.entries(counts).forEach(([id, count]) => {
-      if (count > maxCount) {
-        maxCount = count;
-        topId = id;
-      }
-    });
-
-    if (!topId) return "No Data";
-    return allStations.find(s => s.id === topId)?.name || "Unknown Station";
+    return Object.entries(counts)
+      .map(([id, count]) => ({
+        id,
+        name: allStations.find(s => s.id === id)?.name || "Unknown Station",
+        count
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 4);
   }, [allUsersData, allStations]);
 
   if (isUserLoading) {
@@ -242,23 +239,30 @@ export function AdminView() {
             </div>
             <CardTitle className="mt-4">Radio Analytics</CardTitle>
             <CardDescription>
-              Monitor stream usage and station popularity.
+              Real-time popularity tracking based on listener activity.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Top Station</span>
-                  <span className="font-bold">{topStationName}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Avg. Session</span>
-                  <span className="font-bold">42m 15s</span>
-                </div>
+             <div className="space-y-3">
+                {topStationsList.length > 0 ? (
+                  topStationsList.map((item, i) => (
+                    <div key={item.id} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="w-4 text-xs text-muted-foreground">{i + 1}.</span>
+                        <span className="font-medium truncate">{item.name}</span>
+                      </div>
+                      <Badge variant="outline" className="ml-2 border-white/5 bg-white/5 text-[10px]">
+                        {item.count} {item.count === 1 ? 'listener' : 'listeners'}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground text-sm">No listener data yet.</div>
+                )}
              </div>
              <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11" disabled>
               <TrendingUp className="w-4 h-4 mr-2" />
-              Open Full Report
+              Full Analytics Report
             </Button>
           </CardContent>
         </Card>
