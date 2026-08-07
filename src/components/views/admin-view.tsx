@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useApp } from "@/context/app-context";
@@ -173,7 +172,7 @@ export function AdminView() {
                 <Bell className="w-6 h-6" />
               </div>
             </div>
-            <CardTitle className="mt-4">write here announcement , give edit , add , delete , upcoming , color text buttons</CardTitle>
+            <CardTitle className="mt-4">Announcement</CardTitle>
             <CardDescription>
               Manage live and scheduled scrolling notifications for all users.
             </CardDescription>
