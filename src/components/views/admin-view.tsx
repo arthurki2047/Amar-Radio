@@ -13,7 +13,6 @@ import {
   BarChart3, 
   Bell, 
   ShieldAlert,
-  PlusCircle,
   TrendingUp,
   Edit,
   Trash2,
@@ -81,15 +80,16 @@ export function AdminView() {
   }
 
   const handleUpdateAnnouncement = () => {
-    const newText = prompt("Edit current broadcast message:", announcement);
+    const currentMsg = typeof announcement === 'string' ? announcement : "";
+    const newText = window.prompt("Edit current broadcast message:", currentMsg);
     if (newText !== null) {
-      updateAnnouncement(newText);
+      updateAnnouncement(newText, announcementColor);
     }
   };
 
   const handleDeleteAnnouncement = () => {
-    if (confirm("Are you sure you want to clear the live broadcast?")) {
-      updateAnnouncement("");
+    if (window.confirm("Are you sure you want to clear the live broadcast?")) {
+      updateAnnouncement("", announcementColor);
     }
   };
 
@@ -236,46 +236,6 @@ export function AdminView() {
                   <Trash2 className="w-4 h-4" /> Clear Message
                 </Button>
              </div>
-          </CardContent>
-        </Card>
-
-        {/* System & Security */}
-        <Card className="bg-card/40 border-white/10 backdrop-blur-xl">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div className="p-2 rounded-lg bg-red-500/10 text-red-400">
-                <ShieldAlert className="w-6 h-6" />
-              </div>
-            </div>
-            <CardTitle className="mt-4">System Control</CardTitle>
-            <CardDescription>
-              Maintenance mode and emergency overrides.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-             <Button variant="destructive" className="w-full rounded-xl h-11 opacity-50 cursor-not-allowed">
-              Maintenance Mode
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Content Management */}
-        <Card className="bg-card/40 border-white/10 backdrop-blur-xl">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div className="p-2 rounded-lg bg-green-500/10 text-green-400">
-                <PlusCircle className="w-6 h-6" />
-              </div>
-            </div>
-            <CardTitle className="mt-4">Station Editor</CardTitle>
-            <CardDescription>
-              Manually add or edit radio station streams.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-             <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11" disabled>
-              Launch Editor
-            </Button>
           </CardContent>
         </Card>
       </div>
