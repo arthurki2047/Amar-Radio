@@ -16,17 +16,50 @@ import {
   PlusCircle,
   TrendingUp,
   Edit,
-  Plus,
   Trash2,
-  Calendar,
   Palette
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
+import { useMemo } from "react";
 
 export function AdminView() {
-  const { setView, syncStationsToFirestore, t, isAdmin, announcement, announcementColor, updateAnnouncement, userStats } = useApp();
+  const { 
+    setView, 
+    syncStationsToFirestore, 
+    t, 
+    isAdmin, 
+    announcement, 
+    announcementColor, 
+    updateAnnouncement, 
+    userStats,
+    allUsersData,
+    allStations
+  } = useApp();
   const { isUserLoading } = useUser();
+
+  // Calculate Top Station from real user data
+  const topStationName = useMemo(() => {
+    if (!allUsersData || allUsersData.length === 0) return "N/A";
+    const counts: Record<string, number> = {};
+    allUsersData.forEach(u => {
+      if (u.lastPlayedStationId) {
+        counts[u.lastPlayedStationId] = (counts[u.lastPlayedStationId] || 0) + 1;
+      }
+    });
+    
+    let topId = "";
+    let maxCount = 0;
+    Object.entries(counts).forEach(([id, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        topId = id;
+      }
+    });
+
+    if (!topId) return "No Data";
+    return allStations.find(s => s.id === topId)?.name || "Unknown Station";
+  }, [allUsersData, allStations]);
 
   if (isUserLoading) {
     return <div className="p-8 text-center animate-pulse">Verifying permissions...</div>;
@@ -54,14 +87,6 @@ export function AdminView() {
     }
   };
 
-  const handleAddAnnouncement = () => {
-    const textToAdd = prompt("Enter text to add to the end of the broadcast:");
-    if (textToAdd) {
-      const separator = announcement ? " | " : "";
-      updateAnnouncement(announcement + separator + textToAdd);
-    }
-  };
-
   const handleDeleteAnnouncement = () => {
     if (confirm("Are you sure you want to clear the live broadcast?")) {
       updateAnnouncement("");
@@ -73,13 +98,6 @@ export function AdminView() {
     const currentIndex = colors.indexOf(announcementColor);
     const nextIndex = (currentIndex + 1) % colors.length;
     updateAnnouncement(announcement, colors[nextIndex]);
-  };
-
-  const handleUpcomingAnnouncement = () => {
-    const upcoming = prompt("Draft an upcoming message (it will be prefixed with 'COMING SOON:'):");
-    if (upcoming) {
-      updateAnnouncement("COMING SOON: " + upcoming);
-    }
   };
 
   return (
@@ -173,7 +191,7 @@ export function AdminView() {
              <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Top Station</span>
-                  <span className="font-bold">Radio Mirchi</span>
+                  <span className="font-bold">{topStationName}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Avg. Session</span>
@@ -197,7 +215,7 @@ export function AdminView() {
             </div>
             <CardTitle className="mt-4">Announcement</CardTitle>
             <CardDescription>
-              Manage live and scheduled scrolling notifications for all users.
+              Manage live scrolling notifications for all users.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -209,22 +227,13 @@ export function AdminView() {
              
              <div className="flex flex-wrap gap-3">
                 <Button onClick={handleUpdateAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
-                  <Edit className="w-4 h-4" /> Edit
+                  <Edit className="w-4 h-4" /> Edit Broadcast
                 </Button>
-                <Button onClick={handleAddAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
-                  <Plus className="w-4 h-4" /> Add
+                <Button onClick={handleToggleColor} variant="secondary" className="flex-1 min-w-[120px] gap-2 rounded-xl h-11">
+                  <Palette className="w-4 h-4" /> Cycle Color
                 </Button>
                 <Button onClick={handleDeleteAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-destructive/10 text-destructive border-destructive/20 rounded-xl h-11">
-                  <Trash2 className="w-4 h-4" /> Delete
-                </Button>
-             </div>
-
-             <div className="flex flex-wrap gap-3">
-                <Button onClick={handleUpcomingAnnouncement} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
-                  <Calendar className="w-4 h-4" /> Upcoming
-                </Button>
-                <Button onClick={handleToggleColor} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
-                  <Palette className="w-4 h-4" /> Color Text
+                  <Trash2 className="w-4 h-4" /> Clear Message
                 </Button>
              </div>
           </CardContent>
@@ -272,7 +281,7 @@ export function AdminView() {
       </div>
 
       <div className="pt-8 text-center text-xs text-muted-foreground">
-        Amar Radio Admin v1.2.0 • Build ID: AR-2024-08-05
+        Amar Radio Admin v1.2.1 • Build ID: AR-2024-08-05
       </div>
     </div>
   );

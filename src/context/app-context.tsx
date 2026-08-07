@@ -53,6 +53,7 @@ interface AppContextType {
   announcementColor: string;
   updateAnnouncement: (text: string, color?: string) => void;
   userStats: { total: number; active: number };
+  allUsersData: any[] | null;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -405,7 +406,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     isAuthDialogOpen, setIsAuthDialogOpen,
     sleepTimerDuration, setSleepTimer, isAdmin,
     announcement, announcementColor, updateAnnouncement,
-    userStats
+    userStats,
+    allUsersData
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
