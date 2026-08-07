@@ -44,7 +44,7 @@ export const stations: Station[] = [
   { id: 's50', name: 'ISHQ 104.8 FM', streamUrl: 'https://3.mystreaming.net/uber/bollywoodlove/icecast.audio', logoUrl: 'https://api.iconify.design/emojione/red-heart.svg', category: 'music' },
   { id: 's51', name: 'Radio Wow', streamUrl: 'https://stream-175.zeno.fm/d22wrdbst5quv', logoUrl: 'https://api.iconify.design/emojione/winking-face-with-tongue.svg', category: 'music' },
   { id: 's52', name: 'Kadak FM', streamUrl: 'https://air.pc.cdn.bitgravity.com/air/live/pbaudio099/playlist.m3u8', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'music' },
-  { id: 's53', name: 'Arijit Singh Hindi', streamUrl: 'https://nl4.mystreaming.net/uber/bollywoodaruitsingh/icecast.audio', logoUrl: placeholders.arijit_sing_hindi_logo, category: 'music', artist: 'Arijit Singh' },
+  { id: 's53', name: 'Arijit Singh Hindi', streamUrl: 'https://nl4.mystreaming.net/uber/bollywoodaruitsingh/icecast.audio', logoUrl: placeholders.arijit_singh_hindi_logo, category: 'music', artist: 'Arijit Singh' },
   { id: 's54', name: 'Madhur Sangeet', streamUrl: 'https://stream-163.zeno.fm/8kqd6dp18vzuv', logoUrl: 'https://api.iconify.design/emojione/musical-notes.svg', category: 'music' },
   { id: 's55', name: 'Radio Quarantine Kolkata', streamUrl: 'https://stream-179.zeno.fm/tkdbd3bxk2zuv', logoUrl: 'https://api.iconify.design/emojione/radio.svg', category: 'news' },
   { id: 's56', name: 'Aaj Tak', streamUrl: 'https://aajtaklive-amd.akamaized.net/hls/live/2014416/aajtak/aajtaklive/live_234p/chunks.m3u8', logoUrl: 'https://api.iconify.design/emojione/newspaper.svg', category: 'news' },
