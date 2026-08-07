@@ -205,7 +205,7 @@ export function AdminView() {
               Launch Editor
             </Button>
           </CardContent>
-        </div>
+        </Card>
       </div>
 
       <div className="pt-8 text-center text-xs text-muted-foreground">
