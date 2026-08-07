@@ -109,6 +109,10 @@
         },
         "value": {
           "type": "string"
+        },
+        "color": {
+          "type": "string",
+          "description": "CSS class or hex code for UI elements associated with this setting."
         }
       },
       "required": [

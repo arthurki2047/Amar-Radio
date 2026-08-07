@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useApp } from "@/context/app-context";
@@ -24,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
 
 export function AdminView() {
-  const { setView, syncStationsToFirestore, t, isAdmin, announcement, updateAnnouncement, userStats } = useApp();
+  const { setView, syncStationsToFirestore, t, isAdmin, announcement, announcementColor, updateAnnouncement, userStats } = useApp();
   const { isUserLoading } = useUser();
 
   if (isUserLoading) {
@@ -47,15 +48,37 @@ export function AdminView() {
   }
 
   const handleUpdateAnnouncement = () => {
-    const newText = prompt("Enter new announcement text:", announcement);
+    const newText = prompt("Edit current broadcast message:", announcement);
     if (newText !== null) {
       updateAnnouncement(newText);
     }
   };
 
+  const handleAddAnnouncement = () => {
+    const textToAdd = prompt("Enter text to add to the end of the broadcast:");
+    if (textToAdd) {
+      const separator = announcement ? " | " : "";
+      updateAnnouncement(announcement + separator + textToAdd);
+    }
+  };
+
   const handleDeleteAnnouncement = () => {
-    if (confirm("Are you sure you want to clear the live announcement?")) {
+    if (confirm("Are you sure you want to clear the live broadcast?")) {
       updateAnnouncement("");
+    }
+  };
+
+  const handleToggleColor = () => {
+    const colors = ["text-purple-200", "text-amber-200", "text-emerald-200", "text-white"];
+    const currentIndex = colors.indexOf(announcementColor);
+    const nextIndex = (currentIndex + 1) % colors.length;
+    updateAnnouncement(announcement, colors[nextIndex]);
+  };
+
+  const handleUpcomingAnnouncement = () => {
+    const upcoming = prompt("Draft an upcoming message (it will be prefixed with 'COMING SOON:'):");
+    if (upcoming) {
+      updateAnnouncement("COMING SOON: " + upcoming);
     }
   };
 
@@ -179,7 +202,7 @@ export function AdminView() {
           </CardHeader>
           <CardContent className="space-y-6">
              <div className="p-4 rounded-xl bg-black/40 border border-white/5 min-h-[60px] flex items-center">
-                <p className="text-purple-200 font-medium italic">
+                <p className={`font-medium italic ${announcementColor}`}>
                   {announcement || "No active announcement."}
                 </p>
              </div>
@@ -188,7 +211,7 @@ export function AdminView() {
                 <Button onClick={handleUpdateAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
                   <Edit className="w-4 h-4" /> Edit
                 </Button>
-                <Button onClick={() => alert('Add message rotation feature coming soon!')} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
+                <Button onClick={handleAddAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
                   <Plus className="w-4 h-4" /> Add
                 </Button>
                 <Button onClick={handleDeleteAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-destructive/10 text-destructive border-destructive/20 rounded-xl h-11">
@@ -197,10 +220,10 @@ export function AdminView() {
              </div>
 
              <div className="flex flex-wrap gap-3">
-                <Button onClick={() => alert('Scheduling system coming soon!')} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
+                <Button onClick={handleUpcomingAnnouncement} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
                   <Calendar className="w-4 h-4" /> Upcoming
                 </Button>
-                <Button onClick={() => alert('Rich text styling feature coming soon!')} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
+                <Button onClick={handleToggleColor} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
                   <Palette className="w-4 h-4" /> Color Text
                 </Button>
              </div>

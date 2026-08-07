@@ -50,7 +50,8 @@ interface AppContextType {
   setSleepTimer: (minutes: number | null) => void;
   isAdmin: boolean;
   announcement: string;
-  updateAnnouncement: (text: string) => void;
+  announcementColor: string;
+  updateAnnouncement: (text: string, color?: string) => void;
   userStats: { total: number; active: number };
 }
 
@@ -137,13 +138,16 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     return doc(db, 'settings', 'announcement');
   }, [db]);
 
-  const { data: announcementData } = useDoc<{ value: string }>(announcementRef);
+  const { data: announcementData } = useDoc<{ value: string; color?: string }>(announcementRef);
   const announcement = announcementData?.value || translations[language]['welcome_message'] || "Welcome to Amar Radio!";
+  const announcementColor = announcementData?.color || "text-purple-200";
 
-  const updateAnnouncement = useCallback((text: string) => {
+  const updateAnnouncement = useCallback((text: string, color?: string) => {
     if (!announcementRef || !isAdmin) return;
-    setDocumentNonBlocking(announcementRef, { id: 'announcement', value: text }, { merge: true });
-    toast({ title: "Announcement updated!" });
+    const updateData: any = { id: 'announcement', value: text };
+    if (color) updateData.color = color;
+    setDocumentNonBlocking(announcementRef, updateData, { merge: true });
+    toast({ title: "Broadcast updated!" });
   }, [announcementRef, isAdmin, toast]);
 
   // User profile logic
@@ -173,7 +177,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       setDocumentNonBlocking(userRef, {
         id: user.uid,
         email: user.email,
-        phoneNumber: user.phoneNumber || null,
         username: user.displayName || user.email?.split('@')[0],
         updatedAt: new Date().toISOString()
       }, { merge: true });
@@ -401,7 +404,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     searchTerm, handleSearch, filteredStations, syncStationsToFirestore,
     isAuthDialogOpen, setIsAuthDialogOpen,
     sleepTimerDuration, setSleepTimer, isAdmin,
-    announcement, updateAnnouncement,
+    announcement, announcementColor, updateAnnouncement,
     userStats
   };
 
