@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
 
 export function AdminView() {
-  const { setView, syncStationsToFirestore, t, isAdmin, announcement, updateAnnouncement } = useApp();
+  const { setView, syncStationsToFirestore, t, isAdmin, announcement, updateAnnouncement, userStats } = useApp();
   const { isUserLoading } = useUser();
 
   if (isUserLoading) {
@@ -107,13 +107,13 @@ export function AdminView() {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                 <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Users</p>
-                <p className="text-2xl font-bold mt-1">1,284</p>
+                <p className="text-2xl font-bold mt-1">{userStats.total.toLocaleString()}</p>
               </div>
               <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                 <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Active Now</p>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <p className="text-2xl font-bold">42</p>
+                  <p className="text-2xl font-bold">{userStats.active.toLocaleString()}</p>
                 </div>
               </div>
             </div>

@@ -10,6 +10,7 @@ service cloud.firestore {
      * - User-specific data is strictly owned by the authenticated user.
      * - The radio station catalog and global settings are publicly readable.
      * - Writing to the catalog and settings is restricted ONLY to the administrator.
+     * - Administrator can view user statistics.
      */
 
     // --- Helper Functions ---
@@ -36,7 +37,7 @@ service cloud.firestore {
      * @description Rules for user profile documents.
      */
     match /users/{userId} {
-      allow get, list: if isOwner(userId);
+      allow get, list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && (request.resource.data.id == userId || !('id' in request.resource.data));
       allow delete: if isExistingOwner(userId);

@@ -51,6 +51,7 @@ interface AppContextType {
   isAdmin: boolean;
   announcement: string;
   updateAnnouncement: (text: string) => void;
+  userStats: { total: number; active: number };
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -95,6 +96,40 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
     return staticStations;
   }, [dbStations]);
+
+  // Admin: Fetch all users for statistics
+  const usersCollectionRef = useMemoFirebase(() => {
+    if (!db || !isAdmin) return null;
+    return collection(db, 'users');
+  }, [db, isAdmin]);
+
+  const { data: allUsersData } = useCollection(usersCollectionRef);
+
+  const userStats = useMemo(() => {
+    if (!allUsersData) return { total: 0, active: 0 };
+    const now = new Date().getTime();
+    const activeThreshold = 5 * 60 * 1000; // 5 minutes for "Active Now"
+    const activeCount = allUsersData.filter(u => {
+      if (!u.updatedAt) return false;
+      const lastUpdate = new Date(u.updatedAt).getTime();
+      return (now - lastUpdate) < activeThreshold;
+    }).length;
+    return { total: allUsersData.length, active: activeCount };
+  }, [allUsersData]);
+
+  // Heartbeat logic: Update 'updatedAt' every minute while playing
+  useEffect(() => {
+    if (!user || !db || !isPlaying) return;
+    const userRef = doc(db, 'users', user.uid);
+    
+    const interval = setInterval(() => {
+      setDocumentNonBlocking(userRef, {
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [user, db, isPlaying]);
 
   // Firestore sync for global announcement
   const announcementRef = useMemoFirebase(() => {
@@ -205,7 +240,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     if (userRef && user) {
       setDocumentNonBlocking(userRef, { 
         id: user.uid,
-        lastPlayedStationId: station.id 
+        lastPlayedStationId: station.id,
+        updatedAt: new Date().toISOString()
       }, { merge: true });
     }
 
@@ -365,7 +401,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     searchTerm, handleSearch, filteredStations, syncStationsToFirestore,
     isAuthDialogOpen, setIsAuthDialogOpen,
     sleepTimerDuration, setSleepTimer, isAdmin,
-    announcement, updateAnnouncement
+    announcement, updateAnnouncement,
+    userStats
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
