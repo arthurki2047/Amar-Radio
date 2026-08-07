@@ -5,6 +5,7 @@ import { useApp } from '@/context/app-context';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from './ui/button';
+import React from 'react';
 
 export function UpdatePanel() {
   const { toggleUpdatePanel, announcement, announcementColor } = useApp();
@@ -13,6 +14,29 @@ export function UpdatePanel() {
     hidden: { opacity: 0, height: 0, y: -20 },
     visible: { opacity: 1, height: 'auto', y: 0, transition: { type: 'spring', duration: 0.5 } },
     exit: { opacity: 0, height: 0, y: -20, transition: { duration: 0.3 } },
+  };
+
+  const renderAnnouncement = (text: string) => {
+    if (!text) return null;
+    
+    // Regex to find image URLs
+    const imgRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+    const parts = text.split(imgRegex);
+    
+    return parts.map((part, i) => {
+      if (part.match(imgRegex)) {
+        return (
+          <img 
+            key={i} 
+            src={part} 
+            alt="announcement icon" 
+            className="inline-block h-8 mx-2 object-contain align-middle"
+            onError={(e) => (e.currentTarget.style.display = 'none')}
+          />
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   return (
@@ -33,8 +57,8 @@ export function UpdatePanel() {
           <X className="w-4 h-4" />
         </Button>
         <div className="flex-1 overflow-hidden relative h-16 w-full flex items-center">
-          <div className={`absolute whitespace-nowrap animate-scroll-left hover:pause-animation text-xl font-medium px-6 ${announcementColor}`}>
-            {announcement}
+          <div className={`absolute whitespace-nowrap animate-scroll-left hover:pause-animation text-xl font-medium px-6 flex items-center ${announcementColor}`}>
+            {renderAnnouncement(announcement)}
           </div>
         </div>
       </div>

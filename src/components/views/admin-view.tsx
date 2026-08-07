@@ -61,14 +61,12 @@ export function AdminView() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editText, setEditText] = useState("");
 
-  // Sync edit text with current announcement when dialog opens
   useEffect(() => {
     if (isEditDialogOpen) {
       setEditText(announcement);
     }
   }, [isEditDialogOpen, announcement]);
 
-  // Calculate Top Station from real user data
   const topStationName = useMemo(() => {
     if (!allUsersData || allUsersData.length === 0) return "N/A";
     const counts: Record<string, number> = {};
@@ -125,6 +123,28 @@ export function AdminView() {
     const currentIndex = colors.indexOf(announcementColor);
     const nextIndex = (currentIndex + 1) % colors.length;
     updateAnnouncement(announcement, colors[nextIndex]);
+  };
+
+  const renderPreview = (text: string) => {
+    if (!text) return <span>No active announcement.</span>;
+    
+    const imgRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+    const parts = text.split(imgRegex);
+    
+    return parts.map((part, i) => {
+      if (part.match(imgRegex)) {
+        return (
+          <img 
+            key={i} 
+            src={part} 
+            alt="preview icon" 
+            className="inline-block h-6 mx-1 object-contain align-middle"
+            onError={(e) => (e.currentTarget.style.display = 'none')}
+          />
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   return (
@@ -242,14 +262,14 @@ export function AdminView() {
             </div>
             <CardTitle className="mt-4">Announcement</CardTitle>
             <CardDescription>
-              Manage live scrolling notifications for all users.
+              Manage live scrolling notifications for all users. Supports images (add a .jpg/.png link in the text).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
              <div className="p-4 rounded-xl bg-black/40 border border-white/5 min-h-[60px] flex items-center">
-                <p className={`font-medium italic ${announcementColor}`}>
-                  {announcement || "No active announcement."}
-                </p>
+                <div className={`font-medium italic flex items-center flex-wrap gap-1 ${announcementColor}`}>
+                  {renderPreview(announcement)}
+                </div>
              </div>
              
              <div className="flex flex-wrap gap-3">
@@ -273,14 +293,14 @@ export function AdminView() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">Edit Announcement</DialogTitle>
             <DialogDescription className="text-gray-400">
-              Update the scrolling message displayed to all listeners.
+              Update the scrolling message. You can paste image URLs directly into the text.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Textarea 
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
-              placeholder="Enter message here..."
+              placeholder="Example: Welcome to Amar Radio! https://example.com/logo.png"
               className="min-h-[120px] bg-white/5 border-white/10 text-white focus:ring-purple-500"
             />
           </div>
@@ -314,7 +334,7 @@ export function AdminView() {
       </AlertDialog>
 
       <div className="pt-8 text-center text-xs text-muted-foreground">
-        Amar Radio Admin v1.2.1 • Build ID: AR-2024-08-05
+        Amar Radio Admin v1.2.2 • Build ID: AR-2024-08-05
       </div>
     </div>
   );
