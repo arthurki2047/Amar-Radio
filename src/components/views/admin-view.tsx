@@ -14,7 +14,12 @@ import {
   Bell, 
   ShieldAlert,
   PlusCircle,
-  TrendingUp
+  TrendingUp,
+  Edit,
+  Plus,
+  Trash2,
+  Calendar,
+  Palette
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
@@ -46,6 +51,12 @@ export function AdminView() {
     const newText = prompt("Enter new announcement text:", announcement);
     if (newText !== null) {
       updateAnnouncement(newText);
+    }
+  };
+
+  const handleDeleteAnnouncement = () => {
+    if (confirm("Are you sure you want to clear the live announcement?")) {
+      updateAnnouncement("");
     }
   };
 
@@ -155,22 +166,45 @@ export function AdminView() {
         </Card>
 
         {/* Global Announcements */}
-        <Card className="bg-card/40 border-white/10 backdrop-blur-xl">
+        <Card className="bg-card/40 border-white/10 backdrop-blur-xl lg:col-span-2">
           <CardHeader>
             <div className="flex justify-between items-start">
               <div className="p-2 rounded-lg bg-pink-500/10 text-pink-400">
                 <Bell className="w-6 h-6" />
               </div>
             </div>
-            <CardTitle className="mt-4">activate this option so admin can make announcement</CardTitle>
+            <CardTitle className="mt-4">write here announcement , give edit , add , delete , upcoming , color text buttons</CardTitle>
             <CardDescription>
-              Update the scrolling notification bar text.
+              Manage live and scheduled scrolling notifications for all users.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-             <Button onClick={handleUpdateAnnouncement} variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11">
-              Update Broadcast
-            </Button>
+          <CardContent className="space-y-6">
+             <div className="p-4 rounded-xl bg-black/40 border border-white/5 min-h-[60px] flex items-center">
+                <p className="text-purple-200 font-medium italic">
+                  {announcement || "No active announcement."}
+                </p>
+             </div>
+             
+             <div className="flex flex-wrap gap-3">
+                <Button onClick={handleUpdateAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
+                  <Edit className="w-4 h-4" /> Edit
+                </Button>
+                <Button onClick={() => alert('Add message rotation feature coming soon!')} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
+                  <Plus className="w-4 h-4" /> Add
+                </Button>
+                <Button onClick={handleDeleteAnnouncement} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-destructive/10 text-destructive border-destructive/20 rounded-xl h-11">
+                  <Trash2 className="w-4 h-4" /> Delete
+                </Button>
+             </div>
+
+             <div className="flex flex-wrap gap-3">
+                <Button onClick={() => alert('Scheduling system coming soon!')} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
+                  <Calendar className="w-4 h-4" /> Upcoming
+                </Button>
+                <Button onClick={() => alert('Rich text styling feature coming soon!')} variant="secondary" className="flex-1 min-w-[150px] gap-2 rounded-xl h-11">
+                  <Palette className="w-4 h-4" /> Color Text
+                </Button>
+             </div>
           </CardContent>
         </Card>
 
