@@ -119,9 +119,20 @@ export function AdminView() {
   };
 
   const handleToggleColor = () => {
-    const colors = ["text-purple-200", "text-amber-200", "text-emerald-200", "text-white"];
+    const colors = [
+      "text-purple-200", 
+      "text-amber-200", 
+      "text-emerald-200", 
+      "text-white",
+      "text-rose-400",
+      "text-sky-400",
+      "text-orange-400",
+      "text-fuchsia-400",
+      "text-yellow-200",
+      "text-cyan-300"
+    ];
     const currentIndex = colors.indexOf(announcementColor);
-    const nextIndex = (currentIndex + 1) % colors.length;
+    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % colors.length;
     updateAnnouncement(announcement, colors[nextIndex]);
   };
 
