@@ -17,7 +17,8 @@ import {
   Edit,
   Trash2,
   Palette,
-  Check
+  Check,
+  Zap
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
@@ -69,20 +70,35 @@ export function AdminView() {
 
   const topStationsList = useMemo(() => {
     if (!allUsersData || allUsersData.length === 0) return [];
-    const counts: Record<string, number> = {};
+    
+    const now = new Date().getTime();
+    const activeThreshold = 5 * 60 * 1000; // 5 minutes
+    
+    // Aggregate stats per station
+    const stats: Record<string, { id: string; total: number; active: number }> = {};
+    
     allUsersData.forEach(u => {
-      if (u.lastPlayedStationId) {
-        counts[u.lastPlayedStationId] = (counts[u.lastPlayedStationId] || 0) + 1;
+      const stationId = u.lastPlayedStationId;
+      if (stationId) {
+        if (!stats[stationId]) {
+          stats[stationId] = { id: stationId, total: 0, active: 0 };
+        }
+        stats[stationId].total++;
+        
+        const lastUpdate = u.updatedAt ? new Date(u.updatedAt).getTime() : 0;
+        if (now - lastUpdate < activeThreshold) {
+          stats[stationId].active++;
+        }
       }
     });
     
-    return Object.entries(counts)
-      .map(([id, count]) => ({
-        id,
-        name: allStations.find(s => s.id === id)?.name || "Unknown Station",
-        count
+    return Object.values(stats)
+      .map(s => ({
+        ...s,
+        name: allStations.find(st => st.id === s.id)?.name || `Station ${s.id}`
       }))
-      .sort((a, b) => b.count - a.count)
+      // Sort by active listeners first, then total reach
+      .sort((a, b) => b.active - a.active || b.total - a.total)
       .slice(0, 4);
   }, [allUsersData, allStations]);
 
@@ -163,7 +179,7 @@ export function AdminView() {
             <LayoutDashboard className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">admin dashboard available only for my id</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
             <p className="text-muted-foreground text-sm">Comprehensive control for Amar Radio.</p>
           </div>
         </div>
@@ -236,33 +252,43 @@ export function AdminView() {
               <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
                 <BarChart3 className="w-6 h-6" />
               </div>
+              <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-400 border-orange-500/20">LIVE REPORT</Badge>
             </div>
             <CardTitle className="mt-4">Radio Analytics</CardTitle>
             <CardDescription>
-              Real-time popularity tracking based on listener activity.
+              Popularity report based on real-time listener activity.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="space-y-3">
                 {topStationsList.length > 0 ? (
                   topStationsList.map((item, i) => (
-                    <div key={item.id} className="flex items-center justify-between text-sm">
+                    <div key={item.id} className="flex items-center justify-between text-sm group">
                       <div className="flex items-center gap-2 truncate">
-                        <span className="w-4 text-xs text-muted-foreground">{i + 1}.</span>
-                        <span className="font-medium truncate">{item.name}</span>
+                        <span className="w-4 text-xs text-muted-foreground font-mono">{i + 1}.</span>
+                        <span className="font-semibold truncate group-hover:text-amber-400 transition-colors">{item.name}</span>
                       </div>
-                      <Badge variant="outline" className="ml-2 border-white/5 bg-white/5 text-[10px]">
-                        {item.count} {item.count === 1 ? 'listener' : 'listeners'}
-                      </Badge>
+                      <div className="flex gap-2">
+                        {item.active > 0 && (
+                          <Badge className="bg-green-500/10 text-green-500 border-none text-[9px] flex gap-1 items-center px-1.5 py-0 h-5">
+                            <Zap className="w-2 h-2 fill-current" /> {item.active}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="border-white/5 bg-white/5 text-[9px] h-5 opacity-60">
+                          {item.total}
+                        </Badge>
+                      </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-4 text-muted-foreground text-sm">No listener data yet.</div>
+                  <div className="text-center py-4 text-muted-foreground text-sm bg-white/5 rounded-lg border border-dashed border-white/10">
+                    No active listener data yet.
+                  </div>
                 )}
              </div>
-             <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11" disabled>
+             <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11 mt-2" disabled>
               <TrendingUp className="w-4 h-4 mr-2" />
-              Full Analytics Report
+              Detailed Reports
             </Button>
           </CardContent>
         </Card>
@@ -304,7 +330,7 @@ export function AdminView() {
 
       {/* Edit Announcement Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-[#0f172a] border-white/10 text-white">
+        <DialogContent className="sm:max-w-[500px] bg-[#0f172a] border-white/10 text-white rounded-[1.5rem]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">Edit Announcement</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -316,14 +342,14 @@ export function AdminView() {
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               placeholder="Example: Welcome to Amar Radio! https://example.com/logo.png"
-              className="min-h-[120px] bg-white/5 border-white/10 text-white focus:ring-purple-500"
+              className="min-h-[120px] bg-white/5 border-white/10 text-white focus:ring-purple-500 rounded-xl"
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="border-white/10 text-white hover:bg-white/5">
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="border-white/10 text-white hover:bg-white/5 rounded-xl">
               Cancel
             </Button>
-            <Button onClick={handleSaveAnnouncement} className="bg-purple-600 hover:bg-purple-700 text-white gap-2">
+            <Button onClick={handleSaveAnnouncement} className="bg-purple-600 hover:bg-purple-700 text-white gap-2 rounded-xl">
               <Check className="w-4 h-4" /> Save Changes
             </Button>
           </DialogFooter>
@@ -332,16 +358,16 @@ export function AdminView() {
 
       {/* Delete Confirmation Alert */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#0f172a] border-white/10 text-white">
+        <AlertDialogContent className="bg-[#0f172a] border-white/10 text-white rounded-[1.5rem]">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription className="text-gray-400">
               This will immediately clear the live broadcast message for everyone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
               Clear Message
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -349,7 +375,7 @@ export function AdminView() {
       </AlertDialog>
 
       <div className="pt-8 text-center text-xs text-muted-foreground">
-        Amar Radio Admin v1.2.2 • Build ID: AR-2024-08-05
+        Amar Radio Admin v1.3.0 • Build ID: AR-2024-08-06
       </div>
     </div>
   );
