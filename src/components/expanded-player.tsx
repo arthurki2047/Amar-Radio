@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useApp } from '@/context/app-context';

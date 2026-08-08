@@ -1,13 +1,22 @@
-
 'use client';
 
 import { useApp } from '@/context/app-context';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, RotateCcw, RotateCw } from 'lucide-react';
 
 const PlayerControl = () => {
-  const { currentStation, isPlaying, togglePlayPause, playNext, playPrevious, togglePlayer, t } = useApp();
+  const { 
+    currentStation, 
+    isPlaying, 
+    togglePlayPause, 
+    playNext, 
+    playPrevious, 
+    togglePlayer, 
+    seekForward, 
+    seekBackward,
+    t 
+  } = useApp();
 
   if (!currentStation) return null;
 
@@ -33,13 +42,23 @@ const PlayerControl = () => {
                 {t('live_radio')}
               </span>
             </div>
+            <h4 className="text-white text-xs font-bold truncate max-w-[120px]">{currentStation.name}</h4>
           </div>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <button 
+            onClick={(e) => { e.stopPropagation(); seekBackward(); }} 
+            className="p-2 text-gray-400 hover:text-white transition active:scale-90 touch-manipulation hidden sm:block"
+            aria-label={t('rewind_10s')}
+          >
+             <RotateCcw className="w-5 h-5" />
+          </button>
+          
           <button onClick={(e) => { e.stopPropagation(); playPrevious(); }} className="p-2 text-gray-400 hover:text-white transition active:scale-90 touch-manipulation">
              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1zm3.66 6.82l5.77 4.07c.66.47 1.58-.01 1.58-.82V7.93c0-.81-.91-1.28-1.58-.82l-5.77 4.07c-.57.4-.57 1.24 0 1.64z"/></svg>
           </button>
+          
           <button
             onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
             className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-full shadow-lg text-white hover:scale-105 active:scale-95 transition-all duration-200"
@@ -50,14 +69,22 @@ const PlayerControl = () => {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="ml-1"><path d="M8 5v14l11-7z" /></svg>
             )}
           </button>
-          <div className="flex items-center gap-1">
-             <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="p-2 text-gray-400 hover:text-white transition active:scale-90 touch-manipulation">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z" /></svg>
-            </button>
-            <button className="p-1 rounded-full hover:bg-white/10">
-                <ChevronUp className="w-5 h-5" />
-            </button>
-          </div>
+
+          <button onClick={(e) => { e.stopPropagation(); playNext(); }} className="p-2 text-gray-400 hover:text-white transition active:scale-90 touch-manipulation">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7.58 16.89l5.77-4.07c.56-.4.56-1.24 0-1.63L7.58 7.11C6.91 6.65 6 7.12 6 7.93v8.14c0 .81.91 1.28 1.58.82zM16 7v10c0 .55.45 1 1 1s1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1z" /></svg>
+          </button>
+
+          <button 
+            onClick={(e) => { e.stopPropagation(); seekForward(); }} 
+            className="p-2 text-gray-400 hover:text-white transition active:scale-90 touch-manipulation hidden sm:block"
+            aria-label={t('forward_10s')}
+          >
+             <RotateCw className="w-5 h-5" />
+          </button>
+
+          <button className="p-1 rounded-full hover:bg-white/10 ml-1">
+              <ChevronUp className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </motion.div>
