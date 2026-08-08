@@ -18,7 +18,11 @@ import {
   Trash2,
   Palette,
   Check,
-  Zap
+  Zap,
+  Radio,
+  Plus,
+  Search,
+  Settings
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
@@ -42,6 +46,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Station } from "@/types";
+import Image from "next/image";
 
 export function AdminView() {
   const { 
@@ -54,13 +63,21 @@ export function AdminView() {
     updateAnnouncement, 
     userStats,
     allUsersData,
-    allStations
+    allStations,
+    upsertStation,
+    deleteStation
   } = useApp();
   const { isUserLoading } = useUser();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editText, setEditText] = useState("");
+
+  // Station Management States
+  const [isStationDialogOpen, setIsStationDialogOpen] = useState(false);
+  const [isStationDeleteAlertOpen, setIsStationDeleteAlertOpen] = useState(false);
+  const [editingStation, setEditingStation] = useState<Partial<Station> | null>(null);
+  const [stationSearch, setStationSearch] = useState("");
 
   useEffect(() => {
     if (isEditDialogOpen) {
@@ -74,7 +91,6 @@ export function AdminView() {
     const now = new Date().getTime();
     const activeThreshold = 5 * 60 * 1000; // 5 minutes
     
-    // Aggregate stats per station
     const stats: Record<string, { id: string; total: number; active: number }> = {};
     
     allUsersData.forEach(u => {
@@ -97,10 +113,15 @@ export function AdminView() {
         ...s,
         name: allStations.find(st => st.id === s.id)?.name || `Station ${s.id}`
       }))
-      // Sort by active listeners first, then total reach
       .sort((a, b) => b.active - a.active || b.total - a.total)
       .slice(0, 4);
   }, [allUsersData, allStations]);
+
+  const filteredStations = useMemo(() => {
+    if (!stationSearch) return allStations.slice(0, 5);
+    const term = stationSearch.toLowerCase();
+    return allStations.filter(s => s.name.toLowerCase().includes(term)).slice(0, 5);
+  }, [allStations, stationSearch]);
 
   if (isUserLoading) {
     return <div className="p-8 text-center animate-pulse">Verifying permissions...</div>;
@@ -151,10 +172,8 @@ export function AdminView() {
 
   const renderPreview = (text: string) => {
     if (!text) return <span>No active announcement.</span>;
-    
     const imgRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?[^\s]*)?)/gi;
     const parts = text.split(imgRegex);
-    
     return parts.map((part, i) => {
       if (part.match(imgRegex)) {
         return (
@@ -169,6 +188,26 @@ export function AdminView() {
       }
       return <span key={i}>{part}</span>;
     });
+  };
+
+  // Station Management Handlers
+  const handleOpenStationDialog = (station?: Station) => {
+    setEditingStation(station || { id: `s${Date.now()}`, name: '', streamUrl: '', logoUrl: '', category: 'music' });
+    setIsStationDialogOpen(true);
+  };
+
+  const handleSaveStation = () => {
+    if (editingStation && editingStation.id && editingStation.name && editingStation.streamUrl && editingStation.logoUrl) {
+      upsertStation(editingStation as Station);
+      setIsStationDialogOpen(false);
+      setEditingStation(null);
+    }
+  };
+
+  const handleDeleteStation = (stationId: string) => {
+    deleteStation(stationId);
+    setIsStationDeleteAlertOpen(false);
+    setEditingStation(null);
   };
 
   return (
@@ -241,6 +280,49 @@ export function AdminView() {
             </div>
             <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 rounded-xl h-11" disabled>
               View User Directory
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Station Management (ADDED HERE) */}
+        <Card className="bg-card/40 border-white/10 backdrop-blur-xl lg:row-span-1">
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <Radio className="w-6 h-6" />
+              </div>
+              <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">{allStations.length} STATIONS</Badge>
+            </div>
+            <CardTitle className="mt-4">Station Management</CardTitle>
+            <CardDescription>
+              Add, edit, or remove radio stations from the global catalog.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Quick search..." 
+                  className="pl-9 bg-white/5 border-white/10 h-10 text-sm"
+                  value={stationSearch}
+                  onChange={(e) => setStationSearch(e.target.value)}
+                />
+             </div>
+             <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                {filteredStations.map(station => (
+                  <div key={station.id} className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+                    <div className="flex items-center gap-3 truncate">
+                      <Image src={station.logoUrl} width={24} height={24} className="rounded-md object-cover" alt="" unoptimized />
+                      <span className="text-sm font-medium truncate">{station.name}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleOpenStationDialog(station)}>
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+             </div>
+             <Button onClick={() => handleOpenStationDialog()} className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white h-11 rounded-xl">
+              <Plus className="w-4 h-4" /> Add New Station
             </Button>
           </CardContent>
         </Card>
@@ -356,7 +438,140 @@ export function AdminView() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Alert */}
+      {/* Station Management Dialog */}
+      <Dialog open={isStationDialogOpen} onOpenChange={setIsStationDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-[#0f172a] border-white/10 text-white rounded-[1.5rem] overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+              <Radio className="w-6 h-6 text-emerald-400" />
+              {editingStation?.id && allStations.some(s => s.id === editingStation.id) ? 'Edit Station' : 'Add New Station'}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Configure station details for the global catalog.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="s-id">Station ID</Label>
+                <Input 
+                  id="s-id" 
+                  value={editingStation?.id || ''} 
+                  onChange={(e) => setEditingStation(prev => ({...prev!, id: e.target.value}))}
+                  placeholder="e.g. s101"
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="s-name">Station Name</Label>
+                <Input 
+                  id="s-name" 
+                  value={editingStation?.name || ''} 
+                  onChange={(e) => setEditingStation(prev => ({...prev!, name: e.target.value}))}
+                  placeholder="e.g. Radio Mirchi"
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="s-stream">Stream URL (.mp3, .m3u8, etc.)</Label>
+              <Input 
+                id="s-stream" 
+                value={editingStation?.streamUrl || ''} 
+                onChange={(e) => setEditingStation(prev => ({...prev!, streamUrl: e.target.value}))}
+                placeholder="https://..."
+                className="bg-white/5 border-white/10"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="s-logo">Logo URL</Label>
+              <div className="flex gap-4 items-center">
+                <Input 
+                  id="s-logo" 
+                  value={editingStation?.logoUrl || ''} 
+                  onChange={(e) => setEditingStation(prev => ({...prev!, logoUrl: e.target.value}))}
+                  placeholder="https://i.pinimg.com/..."
+                  className="bg-white/5 border-white/10 flex-1"
+                />
+                {editingStation?.logoUrl && (
+                  <div className="w-12 h-12 rounded-lg border border-white/10 overflow-hidden bg-black flex-shrink-0">
+                    <img src={editingStation.logoUrl} className="w-full h-full object-cover" alt="preview" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="s-category">Category</Label>
+                <Select 
+                  value={editingStation?.category || 'music'} 
+                  onValueChange={(val) => setEditingStation(prev => ({...prev!, category: val as any}))}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10">
+                    <SelectValue placeholder="Select genre" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0f172a] border-white/10 text-white">
+                    <SelectItem value="music">Music</SelectItem>
+                    <SelectItem value="news">News</SelectItem>
+                    <SelectItem value="bhakti">Bhakti</SelectItem>
+                    <SelectItem value="bangla_music">Bangla Music</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="s-artist">Artist (Optional)</Label>
+                <Input 
+                  id="s-artist" 
+                  value={editingStation?.artist || ''} 
+                  onChange={(e) => setEditingStation(prev => ({...prev!, artist: e.target.value}))}
+                  placeholder="e.g. Arijit Singh"
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+            {editingStation?.id && allStations.some(s => s.id === editingStation.id) && (
+              <Button variant="ghost" className="text-destructive hover:bg-destructive/10 mr-auto" onClick={() => setIsStationDeleteAlertOpen(true)}>
+                <Trash2 className="w-4 h-4 mr-2" /> Delete Station
+              </Button>
+            )}
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setIsStationDialogOpen(false)} className="border-white/10 text-white hover:bg-white/5 rounded-xl flex-1 sm:flex-none">
+                Cancel
+              </Button>
+              <Button onClick={handleSaveStation} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 rounded-xl flex-1 sm:flex-none">
+                <Check className="w-4 h-4" /> Save Station
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Station Delete Confirmation */}
+      <AlertDialog open={isStationDeleteAlertOpen} onOpenChange={setIsStationDeleteAlertOpen}>
+        <AlertDialogContent className="bg-[#0f172a] border-white/10 text-white rounded-[1.5rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanent Action</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Are you sure you want to remove <strong>{editingStation?.name}</strong>? This station will be immediately unavailable to all users.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => editingStation?.id && handleDeleteStation(editingStation.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
+              Remove Station
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Announcement Confirmation */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent className="bg-[#0f172a] border-white/10 text-white rounded-[1.5rem]">
           <AlertDialogHeader>
@@ -375,7 +590,7 @@ export function AdminView() {
       </AlertDialog>
 
       <div className="pt-8 text-center text-xs text-muted-foreground">
-        Amar Radio Admin v1.3.0 • Build ID: AR-2024-08-06
+        Amar Radio Admin v1.4.0 • Build ID: AR-2024-08-07
       </div>
     </div>
   );

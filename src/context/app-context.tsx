@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { translations } from '@/lib/translations';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const MAX_RECENTLY_PLAYED = 10;
 const PUBLIC_STATION_IDS = ['s9', 's10', 's15'];
@@ -44,6 +44,8 @@ interface AppContextType {
   handleSearch: (term: string) => void;
   filteredStations: Station[];
   syncStationsToFirestore: () => void;
+  upsertStation: (station: Station) => void;
+  deleteStation: (stationId: string) => void;
   isAuthDialogOpen: boolean;
   setIsAuthDialogOpen: (open: boolean) => void;
   sleepTimerDuration: number | null;
@@ -113,7 +115,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         if (state.view) setViewState(state.view);
         if (state.isPlayerExpanded !== undefined) setIsPlayerExpanded(state.isPlayerExpanded);
       } else {
-        // Fallback to initial state if no state is present
         setViewState('HOME');
         setIsPlayerExpanded(false);
       }
@@ -121,7 +122,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
     window.addEventListener('popstate', handlePopState);
     
-    // Initialize initial state in browser history
     if (!window.history.state) {
       window.history.replaceState({ view: 'HOME', isPlayerExpanded: false }, '', '');
     }
@@ -141,7 +141,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const allStations = useMemo(() => {
     if (dbStations && dbStations.length > 0) {
-      return dbStations;
+      return [...dbStations].sort((a, b) => a.name.localeCompare(b.name));
     }
     return staticStations;
   }, [dbStations]);
@@ -421,6 +421,20 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [db, user, isAdmin, toast, t]);
 
+  const upsertStation = useCallback((station: Station) => {
+    if (!db || !isAdmin) return;
+    const stationRef = doc(db, 'radioStations', station.id);
+    setDocumentNonBlocking(stationRef, station, { merge: true });
+    toast({ title: "Station saved successfully!" });
+  }, [db, isAdmin, toast]);
+
+  const deleteStation = useCallback((stationId: string) => {
+    if (!db || !isAdmin) return;
+    const stationRef = doc(db, 'radioStations', stationId);
+    deleteDocumentNonBlocking(stationRef);
+    toast({ title: "Station removed!", variant: "destructive" });
+  }, [db, isAdmin, toast]);
+
   const [isUpdatePanelVisible, setIsUpdatePanelVisible] = useState(true);
 
   const setVolume = (newVolume: number) => {
@@ -449,6 +463,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     togglePlayer, toggleFavorite, 
     language, setLanguage, t, isUpdatePanelVisible, toggleUpdatePanel,
     searchTerm, handleSearch, filteredStations, syncStationsToFirestore,
+    upsertStation, deleteStation,
     isAuthDialogOpen, setIsAuthDialogOpen,
     sleepTimerDuration, setSleepTimer, isAdmin,
     announcement, announcementColor, updateAnnouncement,
