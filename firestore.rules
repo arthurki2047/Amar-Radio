@@ -20,7 +20,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == 'arthurki2047@gmail.com';
+      return isSignedIn() && (
+        request.auth.token.email == 'arthurki2047@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
     }
 
     function isOwner(userId) {
@@ -64,6 +67,14 @@ service cloud.firestore {
      */
     match /settings/{settingId} {
       allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    /**
+     * @description Rules for admin permission management.
+     */
+    match /admins/{userId} {
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
   }

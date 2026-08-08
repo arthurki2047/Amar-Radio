@@ -23,7 +23,10 @@ import {
   Plus,
   Search,
   Settings,
-  Wrench
+  Wrench,
+  ShieldCheck,
+  UserCheck,
+  UserPlus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
@@ -53,6 +56,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Station } from "@/types";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function AdminView() {
   const { 
@@ -69,9 +73,12 @@ export function AdminView() {
     upsertStation,
     deleteStation,
     isMaintenanceMode,
-    toggleMaintenanceMode
+    toggleMaintenanceMode,
+    adminIds,
+    grantAdmin,
+    revokeAdmin
   } = useApp();
-  const { isUserLoading } = useUser();
+  const { user: currentUser, isUserLoading } = useUser();
   const { toast } = useToast();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -83,6 +90,10 @@ export function AdminView() {
   const [isStationDeleteAlertOpen, setIsStationDeleteAlertOpen] = useState(false);
   const [editingStation, setEditingStation] = useState<Partial<Station> | null>(null);
   const [stationSearch, setStationSearch] = useState("");
+
+  // Admin Access Management
+  const [isAccessDialogOpen, setIsAccessDialogOpen] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
 
   // Maintenance State
   const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
@@ -131,6 +142,16 @@ export function AdminView() {
     return allStations.filter(s => s.name.toLowerCase().includes(term)).slice(0, 5);
   }, [allStations, stationSearch]);
 
+  const filteredUsers = useMemo(() => {
+    if (!allUsersData) return [];
+    if (!userSearchTerm) return allUsersData.slice(0, 10);
+    const term = userSearchTerm.toLowerCase();
+    return allUsersData.filter(u => 
+      u.email?.toLowerCase().includes(term) || 
+      u.username?.toLowerCase().includes(term)
+    ).slice(0, 10);
+  }, [allUsersData, userSearchTerm]);
+
   if (isUserLoading) {
     return <div className="p-8 text-center animate-pulse">Verifying permissions...</div>;
   }
@@ -141,7 +162,7 @@ export function AdminView() {
         <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Access Restricted</h1>
         <p className="text-muted-foreground mt-2 max-w-md">
-          This dashboard is only available to the authorized administrator ID.
+          This dashboard is only available to authorized administrators.
         </p>
         <Button className="mt-6" onClick={() => setView('HOME')}>
           Return Home
@@ -237,24 +258,24 @@ export function AdminView() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Catalog Management */}
-        <Card className="bg-card/40 border-white/10 backdrop-blur-xl hover:border-purple-500/30 transition-colors">
+        {/* Admin Access Management */}
+        <Card className="bg-card/40 border-white/10 backdrop-blur-xl border-amber-500/20">
           <CardHeader>
-            <div className="flex justify-between items-start">
-              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
-                <Database className="w-6 h-6" />
+             <div className="flex justify-between items-start">
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+                <ShieldCheck className="w-6 h-6" />
               </div>
-              <Badge variant="secondary" className="bg-green-500/10 text-green-400 border-none">Active</Badge>
+              <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-400 border-amber-500/20">{adminIds.length} ADMINS</Badge>
             </div>
-            <CardTitle className="mt-4">{t('catalog_management_title')}</CardTitle>
+            <CardTitle className="mt-4">Access Control</CardTitle>
             <CardDescription>
-              {t('catalog_sync_desc')}
+              Grant or revoke administrative privileges for any user.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={syncStationsToFirestore} className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white h-11 rounded-xl">
-              <RefreshCw className="w-4 h-4" />
-              {t('sync_to_firestore_button')}
+            <Button onClick={() => setIsAccessDialogOpen(true)} className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white h-11 rounded-xl">
+              <UserCheck className="w-4 h-4" />
+              Manage Permissions
             </Button>
           </CardContent>
         </Card>
@@ -335,7 +356,29 @@ export function AdminView() {
           </CardContent>
         </Card>
 
-        {/* Analytics Module */}
+        {/* Catalog Management */}
+        <Card className="bg-card/40 border-white/10 backdrop-blur-xl hover:border-purple-500/30 transition-colors">
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                <Database className="w-6 h-6" />
+              </div>
+              <Badge variant="secondary" className="bg-green-500/10 text-green-400 border-none">Active</Badge>
+            </div>
+            <CardTitle className="mt-4">{t('catalog_management_title')}</CardTitle>
+            <CardDescription>
+              {t('catalog_sync_desc')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={syncStationsToFirestore} className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white h-11 rounded-xl">
+              <RefreshCw className="w-4 h-4" />
+              {t('sync_to_firestore_button')}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Radio Analytics */}
         <Card className="bg-card/40 border-white/10 backdrop-blur-xl">
           <CardHeader>
             <div className="flex justify-between items-start">
@@ -384,7 +427,7 @@ export function AdminView() {
         </Card>
 
         {/* Global Announcements */}
-        <Card className="bg-card/40 border-white/10 backdrop-blur-xl lg:col-span-2">
+        <Card className="bg-card/40 border-white/10 backdrop-blur-xl lg:col-span-1">
           <CardHeader>
             <div className="flex justify-between items-start">
               <div className="p-2 rounded-lg bg-pink-500/10 text-pink-400">
@@ -393,30 +436,121 @@ export function AdminView() {
             </div>
             <CardTitle className="mt-4">Announcement</CardTitle>
             <CardDescription>
-              Manage live scrolling notifications for all users. Supports images (add a .jpg/.png link in the text).
+              Manage live scrolling notifications for all users. Supports images.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-             <div className="p-4 rounded-xl bg-black/40 border border-white/5 min-h-[60px] flex items-center">
+             <div className="p-4 rounded-xl bg-black/40 border border-white/5 min-h-[60px] flex items-center overflow-hidden">
                 <div className={`font-medium italic flex items-center flex-wrap gap-1 ${announcementColor}`}>
                   {renderPreview(announcement)}
                 </div>
              </div>
              
-             <div className="flex flex-wrap gap-3">
-                <Button onClick={() => setIsEditDialogOpen(true)} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
+             <div className="flex flex-col gap-3">
+                <Button onClick={() => setIsEditDialogOpen(true)} variant="outline" className="gap-2 border-white/10 hover:bg-white/5 rounded-xl h-11">
                   <Edit className="w-4 h-4" /> Edit Broadcast
                 </Button>
-                <Button onClick={handleToggleColor} variant="secondary" className="flex-1 min-w-[120px] gap-2 rounded-xl h-11">
-                  <Palette className="w-4 h-4" /> Cycle Color
-                </Button>
-                <Button onClick={() => setIsDeleteDialogOpen(true)} variant="outline" className="flex-1 min-w-[120px] gap-2 border-white/10 hover:bg-destructive/10 text-destructive border-destructive/20 rounded-xl h-11">
-                  <Trash2 className="w-4 h-4" /> Clear Message
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleToggleColor} variant="secondary" className="flex-1 gap-2 rounded-xl h-11">
+                    <Palette className="w-4 h-4" /> Cycle Color
+                  </Button>
+                  <Button onClick={() => setIsDeleteDialogOpen(true)} variant="outline" className="w-12 border-white/10 hover:bg-destructive/10 text-destructive border-destructive/20 rounded-xl h-11">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
              </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Permissions Dialog */}
+      <Dialog open={isAccessDialogOpen} onOpenChange={setIsAccessDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-[#0f172a] border-white/10 text-white rounded-[1.5rem] overflow-hidden flex flex-col max-h-[85vh]">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+              <ShieldCheck className="w-6 h-6 text-amber-400" />
+              Admin Access Management
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Find users by email or username to manage their administrative rights.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Input 
+                placeholder="Search users..." 
+                className="pl-11 bg-white/5 border-white/10 h-12 rounded-xl focus:ring-amber-500"
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest px-1">Registered Users</h3>
+              <div className="space-y-2">
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map(user => {
+                    const isUserAdmin = adminIds.includes(user.id) || user.email === 'arthurki2047@gmail.com';
+                    const isSelf = user.id === currentUser?.uid;
+                    const isMasterAdmin = user.email === 'arthurki2047@gmail.com';
+
+                    return (
+                      <div key={user.id} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 border border-white/10">
+                            <AvatarFallback className="bg-purple-900/50 text-purple-200">
+                              {user.email?.charAt(0).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="font-bold text-sm truncate">{user.username || 'Anonymous'}</p>
+                            <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                          </div>
+                        </div>
+
+                        {isUserAdmin ? (
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 gap-2 rounded-lg"
+                            disabled={isMasterAdmin}
+                            onClick={() => revokeAdmin(user.id)}
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="border-white/10 text-gray-400 hover:text-white hover:bg-white/10 gap-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => grantAdmin(user.id, user.email)}
+                          >
+                            <UserPlus className="w-4 h-4" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Grant Access</span>
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12 rounded-2xl border border-dashed border-white/10">
+                    <p className="text-gray-500 text-sm">No users found matching your search.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 pt-0 mt-auto bg-gradient-to-t from-[#0f172a] to-transparent">
+             <Button className="w-full rounded-xl border-white/10 h-12" variant="outline" onClick={() => setIsAccessDialogOpen(false)}>
+               Close Permissions
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Announcement Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -608,7 +742,7 @@ export function AdminView() {
           {isMaintenanceMode ? "End Maintenance" : "Server Maintenance"}
         </Button>
         <div className="text-center text-xs text-muted-foreground">
-          Amar Radio Admin v1.4.0 • Build ID: AR-2024-08-07
+          Amar Radio Admin v1.5.0 • Build ID: AR-2024-08-08
         </div>
       </div>
 

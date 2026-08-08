@@ -58,6 +58,9 @@ interface AppContextType {
   allUsersData: any[] | null;
   isMaintenanceMode: boolean;
   toggleMaintenanceMode: () => void;
+  grantAdmin: (userId: string, email: string) => void;
+  revokeAdmin: (userId: string) => void;
+  adminIds: string[];
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -84,9 +87,45 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
 
+  // --- Dynamic Admin Logic ---
+  const adminDocRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, 'admins', user.uid);
+  }, [db, user?.uid]);
+
+  const { data: adminRecord } = useDoc(adminDocRef);
+
   const isAdmin = useMemo(() => {
-    return !!user && user.email === ADMIN_EMAIL;
-  }, [user]);
+    if (user?.email === ADMIN_EMAIL) return true;
+    return !!adminRecord;
+  }, [user, adminRecord]);
+
+  const adminsCollectionRef = useMemoFirebase(() => {
+    if (!db || !isAdmin) return null;
+    return collection(db, 'admins');
+  }, [db, isAdmin]);
+
+  const { data: adminRecords } = useCollection(adminsCollectionRef);
+  const adminIds = useMemo(() => adminRecords?.map(a => a.id) || [], [adminRecords]);
+
+  const grantAdmin = useCallback((userId: string, email: string) => {
+    if (!db || !isAdmin) return;
+    const ref = doc(db, 'admins', userId);
+    setDocumentNonBlocking(ref, {
+      id: userId,
+      email,
+      grantedBy: user?.uid || 'system',
+      grantedAt: new Date().toISOString()
+    }, { merge: true });
+    toast({ title: "Admin rights granted." });
+  }, [db, isAdmin, user, toast]);
+
+  const revokeAdmin = useCallback((userId: string) => {
+    if (!db || !isAdmin) return;
+    const ref = doc(db, 'admins', userId);
+    deleteDocumentNonBlocking(ref);
+    toast({ title: "Admin rights revoked.", variant: "destructive" });
+  }, [db, isAdmin, toast]);
 
   // --- Maintenance Mode Logic ---
   const maintenanceRef = useMemoFirebase(() => {
@@ -491,7 +530,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     userStats,
     allUsersData,
     isMaintenanceMode,
-    toggleMaintenanceMode
+    toggleMaintenanceMode,
+    grantAdmin,
+    revokeAdmin,
+    adminIds
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

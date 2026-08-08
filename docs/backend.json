@@ -119,6 +119,18 @@
         "id",
         "value"
       ]
+    },
+    "AdminRecord": {
+      "title": "Admin Record",
+      "description": "A record designating a user as an administrator.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "grantedBy": { "type": "string" },
+        "grantedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email"]
     }
   },
   "auth": {
@@ -140,6 +152,10 @@
     "/settings/{settingId}": {
       "schema": "#/entities/AppSetting",
       "description": "Global application settings like announcements."
+    },
+    "/admins/{userId}": {
+      "schema": "#/entities/AdminRecord",
+      "description": "Authorized administrators."
     }
   }
 }
