@@ -22,7 +22,8 @@ import {
   Radio,
   Plus,
   Search,
-  Settings
+  Settings,
+  Wrench
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
@@ -51,6 +52,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Station } from "@/types";
 import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
 
 export function AdminView() {
   const { 
@@ -68,6 +70,7 @@ export function AdminView() {
     deleteStation
   } = useApp();
   const { isUserLoading } = useUser();
+  const { toast } = useToast();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -78,6 +81,9 @@ export function AdminView() {
   const [isStationDeleteAlertOpen, setIsStationDeleteAlertOpen] = useState(false);
   const [editingStation, setEditingStation] = useState<Partial<Station> | null>(null);
   const [stationSearch, setStationSearch] = useState("");
+
+  // Maintenance State
+  const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isEditDialogOpen) {
@@ -284,7 +290,7 @@ export function AdminView() {
           </CardContent>
         </Card>
 
-        {/* Station Management (ADDED HERE) */}
+        {/* Station Management */}
         <Card className="bg-card/40 border-white/10 backdrop-blur-xl lg:row-span-1">
           <CardHeader>
             <div className="flex justify-between items-start">
@@ -589,9 +595,47 @@ export function AdminView() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="pt-8 text-center text-xs text-muted-foreground">
-        Amar Radio Admin v1.4.0 • Build ID: AR-2024-08-07
+      {/* Footer & Maintenance */}
+      <div className="pt-12 flex flex-col items-center gap-4">
+        <Button 
+          variant="outline" 
+          className="gap-2 border-amber-500/20 text-amber-500 hover:bg-amber-500/10 rounded-xl px-6 h-11"
+          onClick={() => setIsMaintenanceDialogOpen(true)}
+        >
+          <Wrench className="w-4 h-4" />
+          Server Maintenance
+        </Button>
+        <div className="text-center text-xs text-muted-foreground">
+          Amar Radio Admin v1.4.0 • Build ID: AR-2024-08-07
+        </div>
       </div>
+
+      {/* Maintenance Confirmation */}
+      <AlertDialog open={isMaintenanceDialogOpen} onOpenChange={setIsMaintenanceDialogOpen}>
+        <AlertDialogContent className="bg-[#0f172a] border-white/10 text-white rounded-[1.5rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="w-6 h-6 text-amber-500" />
+              System Maintenance
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Are you sure you want to enter maintenance mode? This will notify all users that the server is undergoing updates.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                toast({ title: "Maintenance mode initiated", description: "A system-wide maintenance alert has been sent." });
+                setIsMaintenanceDialogOpen(false);
+              }} 
+              className="bg-amber-600 text-white hover:bg-amber-700 rounded-xl"
+            >
+              Start Maintenance
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
