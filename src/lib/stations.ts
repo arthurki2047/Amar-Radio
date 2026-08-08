@@ -4,9 +4,9 @@ import placeholders from '@/app/lib/placeholder-images.json';
 
 export const stations: Station[] = [
   { id: 's9', name: 'AIR Kolkata', streamUrl: 'https://air.pc.cdn.bitgravity.com/air/live/pbaudio165/playlist.m3u8', logoUrl: placeholders.air_kolkata_logo, category: 'news' },
-  { id: 's10', name: 'Vividh Bharati', streamUrl: 'https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8', logoUrl: placeholders.vividh_bharati_logo, category: 'music' },
+  { id: 's10', name: 'Vividh Bharati', streamUrl: 'https://radio.wavespb.com/live/146ed6ec6dea5a24/146ed6ec6dea5a24.m3u8', logoUrl: placeholders.vividh_bharati_logo, category: 'music' },
   { id: 's11', name: 'AIR FM Gold (Kolkata)', streamUrl: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio057/hlspbaudio05764kbps.m3u8', logoUrl: placeholders.air_fm_gold_logo, category: 'music' },
-  { id: 's12', name: 'AIR Murshidabad', streamUrl: 'https://radio.wavespb.com/live/47a45f818dd9203b/47a45f818dd9203b.m3u8', logoUrl: placeholders.murshidabad_logo, category: 'news' },
+  { id: 's12', name: 'AIR Murshidabad', streamUrl: 'https://d1cvqgmbcpg5yn.cloudfront.net/47a45f818dd9203b/47a45f818dd9203b.m3u8', logoUrl: placeholders.murshidabad_logo, category: 'news' },
   { id: 's13', name: 'Air Rainbow 107 Kolkata', streamUrl: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio058/hlspbaudio05864kbps.m3u8', logoUrl: placeholders.air_rainbow_logo, category: 'music' },
   { id: 's14', name: 'Kolkata - Geetanjali', streamUrl: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio055/hlspbaudio05564kbps.m3u8', logoUrl: placeholders.kolkata_geetanjali_logo, category: 'bangla_music' },
   { id: 's15', name: 'All India Radio News 24X7', streamUrl: 'https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio233/hlspbaudio23364kbps.m3u8', logoUrl: placeholders.air_news_logo, category: 'news' },
@@ -80,7 +80,7 @@ export const stations: Station[] = [
   { id: 's86', name: 'Kalighat Radio', streamUrl: 'https://stream-167.zeno.fm/60ef4p33vxquv', logoUrl: placeholders.kalighat_radio_logo, category: 'bangla_music' },
   { id: 's87', name: 'Hungama Bollywood Dil Se', streamUrl: 'https://stream-157.zeno.fm/143d7gty24zuv', logoUrl: placeholders.hungama_bollywood_dil_se_logo, category: 'music' },
   { id: 's88', name: 'Bhaktisudha Radio', streamUrl: 'https://n09.radiojar.com/cfqyfcspcv8uv?rj-ttl=5&rj-tok=AAABm7MSxAwArgFBqK5_v-yk-g', logoUrl: placeholders.bhaktisudha_radio_logo, category: 'bhakti' },
-  { id: 's89', name: 'Radio Aashiqanaa', streamUrl: 'https://sonic.onlineaudience.co.uk/8114/stream', logoUrl: 'https://api.iconify.design/emojione/red-heart.svg', category: 'music' },
+  { id: 's89', name: 'Radio Aashiqanaa', streamUrl: 'https://mars.streamerr.co/8154/stream', logoUrl: 'https://api.iconify.design/emojione/red-heart.svg', category: 'music' },
   { id: 's90', name: 'Mirchi Hindi Retro', streamUrl: 'https://stream-148.zeno.fm/v2zfmxef798uv', logoUrl: placeholders.mirchi_hindi_retro_logo, category: 'music' },
   { id: 's91', name: 'Namaste Bollywood', streamUrl: 'https://stream-167.zeno.fm/cqak4ap7by8uv', logoUrl: placeholders.namaste_bollywood_logo, category: 'music' },
   { id: 's92', name: 'Hindvani Fm', streamUrl: 'https://edge.iono.fm/xice/129_medium.aac', logoUrl: placeholders.hindvani_fm_logo, category: 'music' },
