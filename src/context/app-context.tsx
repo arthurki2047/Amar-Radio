@@ -59,7 +59,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const [view, setView] = useState<View>('HOME');
+  const [view, setViewState] = useState<View>('HOME');
   const [currentStation, setCurrentStation] = useState<Station | null>(null);
   const [activeQueue, setActiveQueue] = useState<Station[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -83,6 +83,53 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const isAdmin = useMemo(() => {
     return !!user && user.email === ADMIN_EMAIL;
   }, [user]);
+
+  // --- Navigation & History Support ---
+
+  const setView = useCallback((newView: View, pushToHistory = true) => {
+    setViewState(newView);
+    if (pushToHistory && typeof window !== 'undefined') {
+      window.history.pushState({ view: newView, isPlayerExpanded }, '', '');
+    }
+  }, [isPlayerExpanded]);
+
+  const togglePlayer = useCallback(() => {
+    setIsPlayerExpanded(prev => {
+      const newState = !prev;
+      if (typeof window !== 'undefined') {
+        window.history.pushState({ view, isPlayerExpanded: newState }, '', '');
+      }
+      return newState;
+    });
+  }, [view]);
+
+  // Listen for browser back/forward buttons
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      if (state) {
+        if (state.view) setViewState(state.view);
+        if (state.isPlayerExpanded !== undefined) setIsPlayerExpanded(state.isPlayerExpanded);
+      } else {
+        // Fallback to initial state if no state is present
+        setViewState('HOME');
+        setIsPlayerExpanded(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Initialize initial state in browser history
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'HOME', isPlayerExpanded: false }, '', '');
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // --- End Navigation Logic ---
 
   // Firestore sync for stations
   const stationsRef = useMemoFirebase(() => {
@@ -381,7 +428,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     if(audioRef.current) audioRef.current.volume = newVolume;
   };
 
-  const togglePlayer = useCallback(() => setIsPlayerExpanded(prev => !prev), []);
   const handleSearch = useCallback((term: string) => setSearchTerm(term), []);
   const toggleUpdatePanel = useCallback(() => setIsUpdatePanelVisible(prev => !prev), []);
   const setLanguage = useCallback((lang: Language) => setLanguageState(lang), []);
