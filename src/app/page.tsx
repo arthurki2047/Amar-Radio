@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useApp } from '@/context/app-context';
@@ -21,9 +22,10 @@ import { ExpandedPlayer } from '@/components/expanded-player';
 import { NowPlayingBar } from '@/components/now-playing-bar';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { AuthButton } from '@/components/auth-button';
+import { MaintenanceScreen } from '@/components/maintenance-screen';
 
 function AppContent() {
-  const { view, setView, isPlayerExpanded, t } = useApp();
+  const { view, setView, isPlayerExpanded, t, isMaintenanceMode, isAdmin } = useApp();
   const { toast } = useToast();
 
   const handleShare = async () => {
@@ -85,6 +87,12 @@ function AppContent() {
     ease: 'anticipate',
     duration: 0.4,
   };
+
+  // Block regular users if maintenance mode is ON.
+  // Admins can still access the app to fix things or turn it OFF.
+  if (isMaintenanceMode && !isAdmin) {
+    return <MaintenanceScreen />;
+  }
   
   return (
     <div className="h-screen w-screen flex flex-col bg-background font-sans text-foreground">

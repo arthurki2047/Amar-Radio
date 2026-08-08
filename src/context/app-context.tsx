@@ -56,6 +56,8 @@ interface AppContextType {
   updateAnnouncement: (text: string, color?: string) => void;
   userStats: { total: number; active: number };
   allUsersData: any[] | null;
+  isMaintenanceMode: boolean;
+  toggleMaintenanceMode: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -85,6 +87,25 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const isAdmin = useMemo(() => {
     return !!user && user.email === ADMIN_EMAIL;
   }, [user]);
+
+  // --- Maintenance Mode Logic ---
+  const maintenanceRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'settings', 'maintenance');
+  }, [db]);
+
+  const { data: maintenanceData } = useDoc<{ enabled: boolean }>(maintenanceRef);
+  const isMaintenanceMode = maintenanceData?.enabled || false;
+
+  const toggleMaintenanceMode = useCallback(() => {
+    if (!maintenanceRef || !isAdmin) return;
+    const newState = !isMaintenanceMode;
+    setDocumentNonBlocking(maintenanceRef, { id: 'maintenance', enabled: newState }, { merge: true });
+    toast({ 
+      title: newState ? "Maintenance Mode Activated" : "Maintenance Mode Deactivated",
+      description: newState ? "App is now blocked for regular users." : "App is now accessible to everyone.",
+    });
+  }, [maintenanceRef, isAdmin, isMaintenanceMode, toast]);
 
   // --- Navigation & History Support ---
 
@@ -468,7 +489,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     sleepTimerDuration, setSleepTimer, isAdmin,
     announcement, announcementColor, updateAnnouncement,
     userStats,
-    allUsersData
+    allUsersData,
+    isMaintenanceMode,
+    toggleMaintenanceMode
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

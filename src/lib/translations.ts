@@ -111,6 +111,8 @@ export const translations: Translations = {
         sync_to_firestore_button: "Sync Catalog to Firestore",
         catalog_sync_success_title: "Catalog Synced",
         catalog_sync_success_desc: "Radio stations have been successfully saved to Firestore.",
+        maintenance_title: "Maintenance in Progress",
+        maintenance_desc: "We're currently working on improvements to make Amar Radio even better. Please check back soon!",
     },
     hi: {
         app_title: "अमर रेडियो",
@@ -221,6 +223,8 @@ export const translations: Translations = {
         sync_to_firestore_button: "फायरस्टोर में सिंक करें",
         catalog_sync_success_title: "कैटलॉग सिंक हो गया",
         catalog_sync_success_desc: "रेडियो स्टेशन सफलतापूर्वक फायरस्टोर में सहेजे गए हैं।",
+        maintenance_title: "रखरखाव जारी है",
+        maintenance_desc: "हम अमर रेडियो को और भी बेहतर बनाने के लिए वर्तमान में सुधारों पर काम कर रहे हैं। कृपया जल्द ही दोबारा जांचें!",
     },
     bn: {
         app_title: "আমার রেডিও",
@@ -331,5 +335,7 @@ export const translations: Translations = {
         sync_to_firestore_button: "ফায়ারস্টোর এ সিঙ্ক করুন",
         catalog_sync_success_title: "ক্যাটালগ সিঙ্ক করা হয়েছে",
         catalog_sync_success_desc: "রেডিও স্টেশনগুলি সফলভাবে ফায়ারস্টোরে সংরক্ষণ করা হয়েছে।",
+        maintenance_title: "রক্ষণাবেক্ষণ চলছে",
+        maintenance_desc: "আমার রেডিওকে আরও উন্নত করার জন্য আমরা বর্তমানে কাজ করছি। অনুগ্রহ করে শীঘ্রই আবার চেক করুন!",
     }
 };

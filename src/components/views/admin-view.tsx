@@ -67,7 +67,9 @@ export function AdminView() {
     allUsersData,
     allStations,
     upsertStation,
-    deleteStation
+    deleteStation,
+    isMaintenanceMode,
+    toggleMaintenanceMode
   } = useApp();
   const { isUserLoading } = useUser();
   const { toast } = useToast();
@@ -598,12 +600,12 @@ export function AdminView() {
       {/* Footer & Maintenance */}
       <div className="pt-12 flex flex-col items-center gap-4">
         <Button 
-          variant="outline" 
-          className="gap-2 border-amber-500/20 text-amber-500 hover:bg-amber-500/10 rounded-xl px-6 h-11"
+          variant={isMaintenanceMode ? "destructive" : "outline"} 
+          className={`gap-2 rounded-xl px-6 h-11 ${!isMaintenanceMode ? 'border-amber-500/20 text-amber-500 hover:bg-amber-500/10' : ''}`}
           onClick={() => setIsMaintenanceDialogOpen(true)}
         >
           <Wrench className="w-4 h-4" />
-          Server Maintenance
+          {isMaintenanceMode ? "End Maintenance" : "Server Maintenance"}
         </Button>
         <div className="text-center text-xs text-muted-foreground">
           Amar Radio Admin v1.4.0 • Build ID: AR-2024-08-07
@@ -615,23 +617,26 @@ export function AdminView() {
         <AlertDialogContent className="bg-[#0f172a] border-white/10 text-white rounded-[1.5rem]">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <ShieldAlert className="w-6 h-6 text-amber-500" />
-              System Maintenance
+              <ShieldAlert className={`w-6 h-6 ${isMaintenanceMode ? 'text-green-500' : 'text-amber-500'}`} />
+              {isMaintenanceMode ? "Exit Maintenance" : "System Maintenance"}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-400">
-              Are you sure you want to enter maintenance mode? This will notify all users that the server is undergoing updates.
+              {isMaintenanceMode 
+                ? "Are you sure you want to end the maintenance period? Regular users will be able to access the app immediately."
+                : "Are you sure you want to enter maintenance mode? Regular users will be blocked from using the app. Authorized admins like you will still have access."
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
-                toast({ title: "Maintenance mode initiated", description: "A system-wide maintenance alert has been sent." });
+                toggleMaintenanceMode();
                 setIsMaintenanceDialogOpen(false);
               }} 
-              className="bg-amber-600 text-white hover:bg-amber-700 rounded-xl"
+              className={isMaintenanceMode ? "bg-green-600 text-white hover:bg-green-700 rounded-xl" : "bg-amber-600 text-white hover:bg-amber-700 rounded-xl"}
             >
-              Start Maintenance
+              {isMaintenanceMode ? "End Maintenance" : "Start Maintenance"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
